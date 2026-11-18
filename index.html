@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>勉強クエストTODO（公開用）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #e9f5ff;
+        --bg-dot: #cfe8fb;
+        --card: #ffffff;
+        --card-soft: #f4faff;
+        --ink: #22304a;
+        --ink-sub: #5b6b87;
+        --line: #d7e6f5;
+        --accent: #ffb020;
+        --accent-ink: #7a4d00;
+        --xp: #ff8a3d;
+        --good: #22b573;
+        --danger: #e5484d;
+        --chip-bg: #ffffff;
+        --chip-on: #2f7df6;
+        --shadow: 0 3px 0 rgba(34, 48, 74, 0.08), 0 10px 24px rgba(34, 48, 74, 0.08);
+        --radius: 20px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #131a2c;
+          --bg-dot: #1d2947;
+          --card: #1e2947;
+          --card-soft: #243354;
+          --ink: #eef3ff;
+          --ink-sub: #a7b6d4;
+          --line: #33436b;
+          --accent: #ffb020;
+          --accent-ink: #ffd97a;
+          --xp: #ffa25e;
+          --good: #3ddc8e;
+          --danger: #ff6b70;
+          --chip-bg: #1e2947;
+          --chip-on: #4d94ff;
+          --shadow: 0 3px 0 rgba(0, 0, 0, 0.25), 0 10px 24px rgba(0, 0, 0, 0.3);
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans",
+          "Noto Sans JP", sans-serif;
+        background-color: var(--bg);
+        background-image: radial-gradient(var(--bg-dot) 2.2px, transparent 2.3px);
+        background-size: 26px 26px;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        padding: 14px 14px 40px;
+      }
+      button { font-family: inherit; cursor: pointer; min-height: 2.25rem; }
+      .wrap { max-width: 640px; margin: 0 auto; }
+
+      /* ---------- header / status ---------- */
+      .status {
+        background: var(--card);
+        border: 3px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+      .status-top { display: flex; align-items: center; gap: 14px; }
+      .level-badge {
+        flex: 0 0 auto;
+        width: 76px; height: 76px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 4px solid var(--card);
+        box-shadow: 0 0 0 3px var(--accent), var(--shadow);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: #4a2f00;
+        line-height: 1;
+      }
+      .level-badge .lv-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
+      .level-badge .lv-num { font-size: 30px; font-weight: 800; }
+      .status-main { flex: 1 1 auto; min-width: 0; }
+      .level-name { font-size: 19px; font-weight: 800; line-height: 1.25; }
+      .total-xp { font-size: 13px; font-weight: 700; color: var(--ink-sub); margin-top: 2px; }
+      .total-xp b { color: var(--xp); font-size: 16px; }
+      .xpbar {
+        margin-top: 10px; height: 16px;
+        background: var(--card-soft);
+        border: 2px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .xpbar > div {
+        height: 100%; width: 0%;
+        background: repeating-linear-gradient(
+          -45deg, var(--xp) 0 12px, #ffb020 12px 24px
+        );
+        border-radius: 999px;
+        transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .xpbar-note { font-size: 11.5px; font-weight: 700; color: var(--ink-sub); margin-top: 5px; }
+      .status-stats { display: flex; gap: 10px; margin-top: 14px; }
+      .stat {
+        flex: 1 1 0;
+        background: var(--card-soft);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 9px 6px;
+        text-align: center;
+      }
+      .stat .stat-num { font-size: 21px; font-weight: 800; line-height: 1.15; }
+      .stat .stat-num small { font-size: 12px; font-weight: 800; }
+      .stat .stat-label { font-size: 11px; font-weight: 700; color: var(--ink-sub); }
+      .flame { color: #ff6a3d; }
+
+      /* ---------- date chips ---------- */
+      .chips {
+        display: flex; gap: 8px;
+        overflow-x: auto;
+        padding: 16px 2px 8px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .chips::-webkit-scrollbar { display: none; }
+      .chip {
+        flex: 0 0 auto;
+        min-width: 58px; min-height: 58px;
+        border-radius: 18px;
+        border: 3px solid var(--line);
+        background: var(--chip-bg);
+        color: var(--ink);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 1px;
+        padding: 6px 4px;
+        font-weight: 800;
+        position: relative;
+      }
+      .chip .chip-date { font-size: 15px; line-height: 1.1; }
+      .chip .chip-dow { font-size: 11px; color: var(--ink-sub); line-height: 1.1; }
+      .chip .chip-prog { font-size: 10px; color: var(--ink-sub); line-height: 1.1; font-weight: 700; }
+      .chip.on { background: var(--chip-on); border-color: var(--chip-on); color: #fff; }
+      .chip.on .chip-dow, .chip.on .chip-prog { color: #dceaff; }
+      .chip.done { border-color: var(--good); }
+      .chip.done::after {
+        content: "✓";
+        position: absolute; top: -8px; right: -6px;
+        width: 20px; height: 20px; border-radius: 50%;
+        background: var(--good); color: #fff;
+        font-size: 12px; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        border: 2px solid var(--bg);
+      }
+      .chip.today-dot::before {
+        content: "";
+        position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--accent);
+      }
+
+      /* ---------- day header ---------- */
+      .day-head { margin: 10px 2px 12px; }
+      .day-title { font-size: 24px; font-weight: 800; line-height: 1.3; }
+      .day-title .dow-sat { color: #2f7df6; }
+      .day-title .dow-sun { color: #e5484d; }
+      .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+      .badge {
+        font-size: 12px; font-weight: 800;
+        border-radius: 999px; padding: 4px 11px;
+        background: var(--card); border: 2px solid var(--line); color: var(--ink-sub);
+      }
+      .badge.phase { background: #fff3d6; border-color: #ffd97a; color: #8a5a00; }
+      .badge.label { background: #e3f6ec; border-color: #9fe3c0; color: #0d7a47; }
+      @media (prefers-color-scheme: dark) {
+        .badge.phase { background: #3d3418; border-color: #8a6d1f; color: #ffd97a; }
+        .badge.label { background: #173d2a; border-color: #2c6b47; color: #7fe6b2; }
+      }
+      .day-progress { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+      .day-progress .dp-bar {
+        flex: 1; height: 12px; border-radius: 999px;
+        background: var(--card); border: 2px solid var(--line); overflow: hidden;
+      }
+      .day-progress .dp-bar > div {
+        height: 100%; width: 0%; background: var(--good);
+        transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .day-progress .dp-text { font-size: 13px; font-weight: 800; color: var(--ink-sub); white-space: nowrap; }
+
+      /* ---------- task cards ---------- */
+      .tasks { display: flex; flex-direction: column; gap: 10px; }
+      .task {
+        display: flex; align-items: stretch; gap: 0;
+        background: var(--card);
+        border: 3px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: opacity 0.25s, border-color 0.25s;
+      }
+      .task .bar { flex: 0 0 8px; }
+      .task label {
+        flex: 1 1 auto; min-width: 0;
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 14px 12px 12px;
+        cursor: pointer;
+        min-height: 64px;
+      }
+      .task input[type="checkbox"] {
+        appearance: none; -webkit-appearance: none;
+        flex: 0 0 auto;
+        width: 34px; height: 34px; margin: 0;
+        border-radius: 50%;
+        border: 3px solid var(--line);
+        background: var(--card-soft);
+        display: grid; place-content: center;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      }
+      .task input[type="checkbox"]::after {
+        content: "✓";
+        font-size: 19px; font-weight: 800; color: #fff;
+        transform: scale(0);
+        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .task input[type="checkbox"]:checked { background: var(--good); border-color: var(--good); }
+      .task input[type="checkbox"]:checked::after { transform: scale(1); }
+      .task input[type="checkbox"]:active { transform: scale(0.88); }
+      .task .body { flex: 1 1 auto; min-width: 0; }
+      .task .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .task .time { font-size: 13px; font-weight: 800; color: var(--ink-sub); font-variant-numeric: tabular-nums; }
+      .subj {
+        font-size: 11.5px; font-weight: 800;
+        border-radius: 999px; padding: 2.5px 10px;
+      }
+      .task .title { font-size: 15.5px; font-weight: 700; line-height: 1.45; margin-top: 3px; }
+      .task .xp {
+        flex: 0 0 auto; align-self: center;
+        font-size: 13px; font-weight: 800; color: var(--xp);
+        background: var(--card-soft);
+        border: 2px solid var(--line);
+        border-radius: 999px; padding: 4px 10px;
+        white-space: nowrap;
+      }
+      .task.checked { opacity: 0.62; }
+      .task.checked .title { text-decoration: line-through; text-decoration-thickness: 2px; }
+      .task.checked .xp { color: var(--good); }
+
+      /* +XP float */
+      .xp-float {
+        position: fixed; z-index: 60;
+        font-size: 20px; font-weight: 800; color: var(--xp);
+        text-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+        pointer-events: none;
+        animation: floatUp 0.9s ease-out forwards;
+      }
+      @keyframes floatUp {
+        0% { opacity: 0; transform: translateY(6px) scale(0.7); }
+        15% { opacity: 1; transform: translateY(0) scale(1.15); }
+        100% { opacity: 0; transform: translateY(-56px) scale(1); }
+      }
+
+      /* ---------- clear banner ---------- */
+      .clear-banner {
+        display: none;
+        margin-top: 14px;
+        background: var(--good);
+        color: #fff;
+        border-radius: var(--radius);
+        padding: 16px;
+        text-align: center;
+        box-shadow: var(--shadow);
+      }
+      .clear-banner.show { display: block; animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+      .clear-banner .cb-big { font-size: 26px; font-weight: 800; letter-spacing: 0.04em; }
+      .clear-banner .cb-sub { font-size: 13.5px; font-weight: 700; margin-top: 3px; opacity: 0.95; }
+      @keyframes popIn {
+        from { transform: scale(0.85); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      /* ---------- settings ---------- */
+      .settings {
+        margin-top: 26px;
+        background: var(--card);
+        border: 3px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+      .settings h2 { font-size: 15px; font-weight: 800; margin: 0 0 12px; }
+      .settings .row { display: flex; flex-wrap: wrap; gap: 10px; }
+      .btn {
+        border-radius: 999px;
+        border: 3px solid var(--line);
+        background: var(--card-soft);
+        color: var(--ink);
+        font-size: 14px; font-weight: 800;
+        padding: 9px 18px;
+        min-height: 44px;
+      }
+      .btn.primary { background: var(--chip-on); border-color: var(--chip-on); color: #fff; }
+      .btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+      .settings .note { font-size: 12px; font-weight: 700; color: var(--ink-sub); margin-top: 12px; line-height: 1.6; }
+
+      /* ---------- overlays ---------- */
+      .overlay {
+        position: fixed; inset: 0; z-index: 80;
+        background: rgba(19, 26, 44, 0.55);
+        display: none;
+        align-items: center; justify-content: center;
+        padding: 20px;
+      }
+      .overlay.show { display: flex; }
+      .sheet {
+        background: var(--card);
+        border-radius: 26px;
+        border: 3px solid var(--line);
+        box-shadow: var(--shadow);
+        max-width: 420px; width: 100%;
+        padding: 24px 22px;
+        text-align: center;
+        animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        max-height: 88vh; overflow-y: auto;
+      }
+      .sheet .sheet-emoji { font-size: 44px; line-height: 1.2; }
+      .sheet h2 { font-size: 21px; font-weight: 800; margin: 8px 0 6px; }
+      .sheet p { font-size: 14px; font-weight: 700; color: var(--ink-sub); line-height: 1.7; margin: 0 0 10px; }
+      .sheet .howto { text-align: left; margin: 12px 0 18px; display: flex; flex-direction: column; gap: 9px; }
+      .sheet .howto div { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 700; line-height: 1.55; }
+      .sheet .howto .n {
+        flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+        background: var(--accent); color: #4a2f00;
+        font-size: 13px; font-weight: 800;
+        display: flex; align-items: center; justify-content: center;
+        margin-top: 1px;
+      }
+      .sheet .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+      #confetti { position: fixed; inset: 0; z-index: 70; pointer-events: none; display: none; }
+      #confetti.show { display: block; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .xpbar > div, .day-progress .dp-bar > div, .task input[type="checkbox"]::after { transition: none; }
+        .xp-float { animation-duration: 0.01s; }
+        .clear-banner.show, .sheet { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- status header -->
+      <section class="status" aria-label="ステータス">
+        <div class="status-top">
+          <div class="level-badge">
+            <span class="lv-label">LEVEL</span>
+            <span class="lv-num" id="lvNum">1</span>
+          </div>
+          <div class="status-main">
+            <div class="level-name" id="lvName">見習い</div>
+            <div class="total-xp">総XP <b id="totalXp">0</b> XP</div>
+            <div class="xpbar"><div id="xpFill"></div></div>
+            <div class="xpbar-note" id="xpNote">次のレベルまで あと100 XP</div>
+          </div>
+        </div>
+        <div class="status-stats">
+          <div class="stat">
+            <div class="stat-num"><span class="flame">🔥</span> <span id="streak">0</span><small>日</small></div>
+            <div class="stat-label">連続クリア</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num"><span id="todayPct">0</span><small>%</small></div>
+            <div class="stat-label">今日の達成率</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num"><span id="totalDone">0</span><small>/141</small></div>
+            <div class="stat-label">クリアしたタスク</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- date chips -->
+      <nav class="chips" id="chips" aria-label="日付の切り替え"></nav>
+
+      <!-- day -->
+      <div class="day-head">
+        <div class="day-title" id="dayTitle"></div>
+        <div class="badges" id="dayBadges"></div>
+        <div class="day-progress">
+          <div class="dp-bar"><div id="dpFill"></div></div>
+          <div class="dp-text" id="dpText"></div>
+        </div>
+      </div>
+
+      <section class="tasks" id="tasks"></section>
+
+      <div class="clear-banner" id="clearBanner">
+        <div class="cb-big">🎉 QUEST CLEAR!</div>
+        <div class="cb-sub" id="clearSub">この日のタスクを全部クリア！おつかれさま！</div>
+      </div>
+
+      <!-- settings -->
+      <section class="settings">
+        <h2>⚙️ 設定</h2>
+        <div class="row">
+          <button class="btn primary" id="btnToday" type="button">📅 今日に戻る</button>
+          <button class="btn" id="btnGuide" type="button">❓ 使い方</button>
+          <button class="btn danger" id="btnReset" type="button">全チェックをリセット</button>
+        </div>
+        <p class="note">チェック状態はこの端末のブラウザに保存されます。別の端末・ブラウザでは引き継がれません。</p>
+      </section>
+    </div>
+
+    <!-- onboarding / guide -->
+    <div class="overlay" id="guideOverlay" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+      <div class="sheet">
+        <div class="sheet-emoji">🗺️⚔️</div>
+        <h2 id="guideTitle">勉強クエストTODOへようこそ！</h2>
+        <p>11/18〜12/14の固定計画が、そのまま毎日のクエストになってるよ。</p>
+        <div class="howto">
+          <div><span class="n">1</span><span>上の日付チップで日を選ぶ（今日が最初に開くよ）</span></div>
+          <div><span class="n">2</span><span>終わったタスクの丸をタップしてチェック！時間に応じてXPがもらえる（短いタスク10XP／30分〜20XP／50分〜30XP）</span></div>
+          <div><span class="n">3</span><span>XPが貯まるとレベルアップ。「見習い」から「神戸大マスター」を目指そう</span></div>
+          <div><span class="n">4</span><span>1日のタスクを全部チェックすると「QUEST CLEAR!」。毎日続けると連続クリア日数が伸びるよ</span></div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btnStart" type="button">クエスト開始！</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- level up -->
+    <div class="overlay" id="levelOverlay" role="dialog" aria-modal="true">
+      <div class="sheet">
+        <div class="sheet-emoji">⭐</div>
+        <h2>LEVEL UP!</h2>
+        <p id="levelUpText">Lv.2「かけだし冒険者」になった！</p>
+        <div class="row">
+          <button class="btn primary" id="btnLevelOk" type="button">やった！</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- reset confirm -->
+    <div class="overlay" id="resetOverlay" role="dialog" aria-modal="true">
+      <div class="sheet">
+        <div class="sheet-emoji">⚠️</div>
+        <h2>全チェックをリセットする？</h2>
+        <p>全27日・141タスクのチェックが全部外れて、XP・レベル・連続クリア日数も0に戻ります。元には戻せません。</p>
+        <div class="row">
+          <button class="btn" id="btnResetCancel" type="button">やめる</button>
+          <button class="btn danger" id="btnResetOk" type="button">リセットする</button>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="confetti"></canvas>
+
+    <script>
+      "use strict";
+      /* ================= plan data (2026-11-18 → 2026-12-14) ================= */
+      var P1 = "第1フェーズ II・B土台補強";
+      var P2 = "第2フェーズ 数III微分重点";
+      var P3 = "第3フェーズ 定着・回収";
+      /* task: [start, end, subject, title] */
+      var PLAN = [
+        { date: "2026-11-18", phase: null, label: "確定版", tasks: [
+          ["16:30","17:25","数学","数学II・B 基礎問題精講1〜70番の代表問題チェック"],
+          ["17:35","18:05","数学","解き直し＋A/B/C分類"],
+          ["18:15","19:00","数学III","数学III 教科書「数列の極限」の続き"],
+          ["19:10","19:50","英語","英語 ターゲット1〜300の不安な単語＋Vintage Unit 1復習"],
+          ["20:00","20:50","化学","化学 セミナー432番までの既習基本問題の復習"],
+          ["20:55","21:25","その他","明日11/19の準備＋最終確認"]
+        ]},
+        { date: "2026-11-19", phase: P1, label: null, tasks: [
+          ["15:30","16:20","数学","II・B基礎問題精講 三角関数の合成・加法定理の復習（〜70番）"],
+          ["16:35","17:20","数学","II・B 三角関数の基本問題を解き直す"],
+          ["18:00","18:40","数学III","数III教科書「極限」の基本例題"],
+          ["19:00","19:30","物理","物理エッセンス 力学114番以降"],
+          ["20:00","20:25","数学","数学の塾予習"],
+          ["20:25","20:45","英語","英単語301〜330"]
+        ]},
+        { date: "2026-11-20", phase: P1, label: "塾=数学", tasks: [
+          ["15:30","16:20","数学","II・B 三角関数の重要問題"],
+          ["17:00","18:30","塾","河合塾・数学"],
+          ["18:45","19:15","塾","塾の復習"],
+          ["19:15","19:45","英語","英単語331〜360"],
+          ["19:45","20:00","その他","間違いの記録"]
+        ]},
+        { date: "2026-11-21", phase: P1, label: null, tasks: [
+          ["9:00","10:20","数学","II・B 三角関数の総復習"],
+          ["10:40","12:00","数学","II・B 指数関数の基本問題"],
+          ["13:00","14:00","数学III","数III教科書「極限」の基本事項・例題"],
+          ["14:20","15:20","化学","セミナー化学433〜442（基本問題）"],
+          ["15:40","16:10","英語","英単語361〜390"],
+          ["19:30","20:00","英語","Vintage Unit 1 解き直し"]
+        ]},
+        { date: "2026-11-22", phase: P1, label: "軽め", tasks: [
+          ["9:30","10:20","数学","II・B 三角関数の間違い直し"],
+          ["10:30","11:15","物理","物理エッセンス 力学114番以降の復習"],
+          ["11:15","11:30","英語","英単語391〜410"],
+          ["19:30","19:50","英語","英語の塾予習"]
+        ]},
+        { date: "2026-11-23", phase: P1, label: "塾=英語", tasks: [
+          ["9:30","10:30","数学","II・B 指数関数の基本問題"],
+          ["10:50","11:40","数学","II・B 対数関数の基本事項"],
+          ["11:40","12:00","英語","英単語411〜430"],
+          ["13:00","13:50","化学","セミナー化学443〜452（基本問題）"],
+          ["14:10","14:50","数学III","数III教科書「極限」の例題"],
+          ["17:00","18:30","塾","河合塾・英語"],
+          ["18:45","19:15","塾","授業の復習"]
+        ]},
+        { date: "2026-11-24", phase: P1, label: null, tasks: [
+          ["15:30","16:20","数学","II・B 対数関数の基本問題"],
+          ["16:40","17:30","数学","三角・指数・対数の混合復習"],
+          ["18:15","19:00","物理","物理エッセンス 力学115番以降"],
+          ["19:00","19:20","英語","英単語431〜450"],
+          ["19:20","19:40","数学","数学の間違い直し"]
+        ]},
+        { date: "2026-11-25", phase: P1, label: "確認日", tasks: [
+          ["15:30","16:20","数学","II・B 三角関数の確認テスト"],
+          ["16:40","17:30","数学","指数・対数の確認テスト"],
+          ["18:15","19:00","数学III","数III教科書「極限」の重要例題を解き直す"],
+          ["19:00","19:30","化学","セミナー化学453〜462（基本問題）"],
+          ["19:30","19:50","英語","英単語451〜470"]
+        ]},
+        { date: "2026-11-26", phase: P2, label: null, tasks: [
+          ["15:30","16:20","数学III","数III教科書「微分係数」の説明を読む"],
+          ["16:40","17:20","数学III","数III教科書「微分係数」の例題"],
+          ["18:00","18:40","数学","II・B 三角関数の苦手問題"],
+          ["19:00","19:30","物理","物理エッセンス 力学116番以降"],
+          ["20:00","20:25","数学","数学の塾予習"],
+          ["20:25","20:45","英語","英単語471〜490"]
+        ]},
+        { date: "2026-11-27", phase: P2, label: "塾=数学", tasks: [
+          ["15:30","16:20","数学III","数III教科書「導関数の定義」"],
+          ["17:00","18:30","塾","河合塾・数学"],
+          ["18:45","19:15","塾","塾の復習"],
+          ["19:15","19:35","英語","英単語491〜510"],
+          ["19:35","20:00","数学III","微分係数の定義を自分の言葉で説明する"]
+        ]},
+        { date: "2026-11-28", phase: P2, label: null, tasks: [
+          ["9:00","10:20","数学III","数III教科書「微分係数・導関数」の理解"],
+          ["10:40","11:40","数学III","数III教科書「導関数の公式」の導出"],
+          ["11:40","12:00","数学III","例題の解き直し"],
+          ["13:00","14:00","数学III","数III教科書「導関数の計算」の例題"],
+          ["14:20","15:20","化学","セミナー化学463〜472（基本問題）"],
+          ["15:40","16:00","英語","英単語511〜530"]
+        ]},
+        { date: "2026-11-29", phase: P2, label: "軽め", tasks: [
+          ["9:30","10:15","数学III","数III「微分係数・導関数」の復習"],
+          ["10:25","11:10","物理","物理エッセンス 力学の間違い直し（〜113番）"],
+          ["11:10","11:25","英語","英単語531〜550"],
+          ["19:30","19:50","英語","英語の塾予習"]
+        ]},
+        { date: "2026-11-30", phase: P2, label: "塾=英語", tasks: [
+          ["15:30","16:20","数学III","数III教科書「導関数の公式」の確認"],
+          ["17:00","18:30","塾","河合塾・英語"],
+          ["18:45","19:15","塾","授業の復習"],
+          ["19:15","19:35","英語","英単語551〜570"],
+          ["19:35","20:00","数学III","数III 導関数の計算練習"]
+        ]},
+        { date: "2026-12-01", phase: P2, label: null, tasks: [
+          ["15:30","16:20","数学III","数III教科書「多項式の導関数」"],
+          ["16:40","17:30","数学III","数III 微分計算の例題"],
+          ["18:15","19:00","物理","物理エッセンス 力学の苦手問題（〜113番）"],
+          ["19:00","19:20","英語","英単語571〜590"],
+          ["19:20","19:40","数学III","微分計算の間違い直し"]
+        ]},
+        { date: "2026-12-02", phase: P2, label: "確認日", tasks: [
+          ["15:30","16:20","数学III","数III教科書「導関数」の基本計算"],
+          ["16:40","17:30","数学III","数III 教科書例題を解き直す"],
+          ["18:15","19:00","化学","セミナー化学473〜482（基本問題）"],
+          ["19:00","19:20","英語","英単語591〜610"],
+          ["19:20","19:40","数学III","数IIIの間違い直し"]
+        ]},
+        { date: "2026-12-03", phase: P3, label: null, tasks: [
+          ["15:30","16:20","数学","II・B基礎問題精講 71番以降の重要問題"],
+          ["16:40","17:20","数学III","数III教科書「導関数」の基本計算"],
+          ["18:00","18:40","数学","II・Bの間違い直し"],
+          ["20:00","20:25","数学","数学の塾予習"],
+          ["20:25","20:45","英語","英単語611〜630"]
+        ]},
+        { date: "2026-12-04", phase: P3, label: "塾=数学", tasks: [
+          ["15:30","16:20","数学III","数III教科書「導関数の計算」の例題"],
+          ["17:00","18:30","塾","河合塾・数学"],
+          ["18:45","19:15","塾","塾の復習"],
+          ["19:15","19:35","英語","英単語631〜650"],
+          ["19:35","20:00","数学III","数III 微分計算の復習"]
+        ]},
+        { date: "2026-12-05", phase: P3, label: null, tasks: [
+          ["9:00","10:20","数学","II・B基礎問題精講 71番以降の重要問題"],
+          ["10:40","11:40","数学III","数III教科書「導関数」の例題・基本問題"],
+          ["11:40","12:00","数学III","数III 微分計算の解き直し"],
+          ["13:00","14:00","物理","物理エッセンス 波動「波の基本的な性質」"],
+          ["14:20","15:20","化学","セミナー化学483〜492（基本問題）"],
+          ["15:40","16:00","英語","英単語651〜670"],
+          ["19:30","20:00","英語","Vintage Unit 1 解き直し"]
+        ]},
+        { date: "2026-12-06", phase: P3, label: "軽め", tasks: [
+          ["9:30","10:15","数学","II・B 今週の間違い直し"],
+          ["10:25","11:10","数学III","数III 微分計算の復習"],
+          ["11:10","11:25","英語","英単語671〜690"],
+          ["19:30","19:50","英語","英語の塾予習"]
+        ]},
+        { date: "2026-12-07", phase: P3, label: "塾=英語", tasks: [
+          ["15:30","16:20","数学III","数III基礎問題精講 微分の基本問題"],
+          ["17:00","18:30","塾","河合塾・英語"],
+          ["18:45","19:15","塾","授業の復習"],
+          ["19:15","19:35","英語","英単語691〜710"],
+          ["19:35","20:00","数学III","数III 微分計算の復習"]
+        ]},
+        { date: "2026-12-08", phase: P3, label: null, tasks: [
+          ["15:30","16:20","数学","II・B基礎問題精講 71番以降の重要問題"],
+          ["16:40","17:20","数学III","数III教科書・基本問題の解き直し"],
+          ["18:00","18:45","物理","物理エッセンス 波動「波の重ね合わせ・定常波」"],
+          ["18:45","19:05","英語","英単語711〜730"],
+          ["19:05","19:25","数学","数学の間違い直し"]
+        ]},
+        { date: "2026-12-09", phase: P3, label: null, tasks: [
+          ["15:30","16:20","数学III","数III基礎問題精講 微分の基本問題"],
+          ["16:40","17:20","数学","II・B基礎問題精講 71番以降の解き直し"],
+          ["18:00","18:45","化学","セミナー化学493〜502（基本問題）"],
+          ["18:45","19:05","英語","英単語731〜750"],
+          ["19:05","19:25","数学III","数IIIの間違い直し"]
+        ]},
+        { date: "2026-12-10", phase: P3, label: null, tasks: [
+          ["15:30","16:20","数学","II・B基礎問題精講 71番以降の重要問題"],
+          ["16:40","17:20","数学III","数III教科書 微分の例題"],
+          ["18:00","18:40","数学III","数III基礎問題精講の基本問題"],
+          ["20:00","20:25","数学","数学の塾予習"],
+          ["20:25","20:45","英語","英単語751〜770"]
+        ]},
+        { date: "2026-12-11", phase: P3, label: "塾=数学", tasks: [
+          ["15:30","16:20","数学III","数III 微分計算（教科書の例題・基本問題）"],
+          ["17:00","18:30","塾","河合塾・数学"],
+          ["18:45","19:15","塾","塾の復習"],
+          ["19:15","19:35","英語","英単語771〜790"],
+          ["19:35","20:00","数学III","今週の数IIIの間違い直し"]
+        ]},
+        { date: "2026-12-12", phase: P3, label: "総合演習", tasks: [
+          ["9:00","10:20","数学","II・B基礎問題精講 71番以降の重要問題の総復習"],
+          ["10:40","11:40","数学III","数III基礎問題精講 微分の基本問題"],
+          ["11:40","12:00","その他","解けなかった問題の解説確認"],
+          ["13:00","14:00","物理","物理エッセンス 波動「波の基本性質・定常波」の復習"],
+          ["14:20","15:20","化学","セミナー化学503〜512（基本問題）"],
+          ["15:40","16:00","英語","英単語791〜810"]
+        ]},
+        { date: "2026-12-13", phase: P3, label: "軽め", tasks: [
+          ["9:30","10:15","数学","II・B 重要問題の解き直し"],
+          ["10:25","11:10","数学III","数III 微分計算の確認"],
+          ["11:10","11:25","英語","英単語811〜830"],
+          ["19:30","19:50","英語","英語の塾予習"]
+        ]},
+        { date: "2026-12-14", phase: P3, label: "確認日・塾=英語", tasks: [
+          ["15:30","16:20","数学","II・B基礎問題精講 71番以降の重要問題を解説なしで解く"],
+          ["17:00","18:30","塾","河合塾・英語"],
+          ["18:45","19:15","塾","授業の復習"],
+          ["19:15","19:35","英語","英単語831〜850"],
+          ["19:35","20:00","その他","II・Bと数IIIの到達度を記録"]
+        ]}
+      ];
+
+      var SUBJECT_STYLE = {
+        "数学":   { bg: "#dbeafe", fg: "#1d4ed8", bar: "#2563eb" },
+        "数学III": { bg: "#f3e8ff", fg: "#7e22ce", bar: "#9333ea" },
+        "物理":   { bg: "#dcfce7", fg: "#15803d", bar: "#16a34a" },
+        "化学":   { bg: "#ffedd5", fg: "#c2410c", bar: "#ea580c" },
+        "英語":   { bg: "#fce7f3", fg: "#be185d", bar: "#db2777" },
+        "塾":     { bg: "#e5e7eb", fg: "#374151", bar: "#6b7280" },
+        "その他": { bg: "#fef9c3", fg: "#a16207", bar: "#eab308" }
+      };
+      var LEVEL_NAMES = ["見習い","かけだし冒険者","勉強戦士","集中マスター","問題解きの達人","努力の天才","受験マスター","神戸大マスター"];
+      var WEEKDAYS = ["日","月","火","水","木","金","土"];
+      var TOTAL_TASKS = 0;
+      PLAN.forEach(function (d) { TOTAL_TASKS += d.tasks.length; });
+
+      function xpFor(start, end) {
+        function toMin(s) { var p = s.split(":"); return (+p[0]) * 60 + (+p[1]); }
+        var mins = toMin(end) - toMin(start);
+        if (mins >= 50) return 30;
+        if (mins >= 30) return 20;
+        return 10;
+      }
+      function levelFor(totalXp) {
+        var level = 1, rest = totalXp;
+        while (rest >= level * 100) { rest -= level * 100; level += 1; }
+        return {
+          level: level, into: rest, needed: level * 100,
+          name: LEVEL_NAMES[Math.min(level - 1, LEVEL_NAMES.length - 1)]
+        };
+      }
+      function parseDate(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+      function toKey(dt) {
+        function p(n) { return String(n).padStart(2, "0"); }
+        return dt.getFullYear() + "-" + p(dt.getMonth() + 1) + "-" + p(dt.getDate());
+      }
+      function todayKey() { return toKey(new Date()); }
+      function taskId(date, i) { return date + "#" + i; }
+
+      /* ================= state (localStorage) ================= */
+      var LS_KEY = "benkyo-quest-public-v1";
+      var state = { checked: {}, guided: false };
+      try {
+        var raw = localStorage.getItem(LS_KEY);
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            state.checked = parsed.checked || {};
+            state.guided = !!parsed.guided;
+          }
+        }
+      } catch (e) { /* storage unavailable: run in-memory only */ }
+      function save() {
+        try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      /* ================= derived stats ================= */
+      function dayStats(day) {
+        var done = 0, xp = 0;
+        day.tasks.forEach(function (t, i) {
+          if (state.checked[taskId(day.date, i)]) { done += 1; xp += xpFor(t[0], t[1]); }
+        });
+        return { done: done, total: day.tasks.length, xp: xp, clear: done === day.tasks.length };
+      }
+      function totalXp() {
+        var sum = 0;
+        PLAN.forEach(function (d) { sum += dayStats(d).xp; });
+        return sum;
+      }
+      function totalDone() {
+        var n = 0;
+        PLAN.forEach(function (d) { n += dayStats(d).done; });
+        return n;
+      }
+      function streak() {
+        var byDate = {};
+        PLAN.forEach(function (d) { byDate[d.date] = dayStats(d).clear; });
+        var cursor = parseDate(todayKey());
+        /* if today isn't cleared yet, the streak can still run through yesterday */
+        if (!byDate[toKey(cursor)]) cursor.setDate(cursor.getDate() - 1);
+        var n = 0;
+        while (byDate[toKey(cursor)]) {
+          n += 1;
+          cursor.setDate(cursor.getDate() - 1);
+        }
+        return n;
+      }
+
+      /* ================= rendering ================= */
+      var $ = function (id) { return document.getElementById(id); };
+      var chipsEl = $("chips"), tasksEl = $("tasks");
+      var selected = todayKey();
+      if (!PLAN.some(function (d) { return d.date === selected; })) {
+        selected = selected < PLAN[0].date ? PLAN[0].date : PLAN[PLAN.length - 1].date;
+      }
+
+      function renderStatus() {
+        var xp = totalXp();
+        var lv = levelFor(xp);
+        $("lvNum").textContent = lv.level;
+        $("lvName").textContent = lv.name;
+        $("totalXp").textContent = xp;
+        $("xpFill").style.width = Math.round((lv.into / lv.needed) * 100) + "%";
+        $("xpNote").textContent = "次のレベルまで あと" + (lv.needed - lv.into) + " XP";
+        $("streak").textContent = streak();
+        var tKey = todayKey();
+        var today = null;
+        PLAN.forEach(function (d) { if (d.date === tKey) today = d; });
+        var pct = 0;
+        if (today) { var s = dayStats(today); pct = today.tasks.length ? Math.round((s.done / s.total) * 100) : 0; }
+        $("todayPct").textContent = pct;
+        $("totalDone").textContent = totalDone();
+      }
+
+      function renderChips() {
+        chipsEl.innerHTML = "";
+        var tKey = todayKey();
+        PLAN.forEach(function (day) {
+          var dt = parseDate(day.date);
+          var s = dayStats(day);
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "chip" + (day.date === selected ? " on" : "") + (s.clear ? " done" : "") + (day.date === tKey ? " today-dot" : "");
+          b.setAttribute("aria-label", (dt.getMonth() + 1) + "月" + dt.getDate() + "日（" + WEEKDAYS[dt.getDay()] + "）");
+          b.innerHTML =
+            '<span class="chip-date">' + (dt.getMonth() + 1) + "/" + dt.getDate() + "</span>" +
+            '<span class="chip-dow">' + WEEKDAYS[dt.getDay()] + "曜</span>" +
+            '<span class="chip-prog">' + s.done + "/" + s.total + "</span>";
+          b.addEventListener("click", function () {
+            selected = day.date;
+            renderAll();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+          chipsEl.appendChild(b);
+        });
+        var on = chipsEl.querySelector(".chip.on");
+        if (on) on.scrollIntoView({ block: "nearest", inline: "center" });
+      }
+
+      function renderDay() {
+        var day = null;
+        PLAN.forEach(function (d) { if (d.date === selected) day = d; });
+        if (!day) return;
+        var dt = parseDate(day.date);
+        var dow = dt.getDay();
+        var dowCls = dow === 6 ? "dow-sat" : dow === 0 ? "dow-sun" : "";
+        $("dayTitle").innerHTML =
+          (dt.getMonth() + 1) + "月" + dt.getDate() + "日 <span class=\"" + dowCls + "\">（" + WEEKDAYS[dow] + "）</span>" +
+          (day.date === todayKey() ? " ・今日" : "");
+        var badges = "";
+        if (day.phase) badges += '<span class="badge phase">' + day.phase + "</span>";
+        if (day.label) badges += '<span class="badge label">' + day.label + "</span>";
+        $("dayBadges").innerHTML = badges;
+
+        var s = dayStats(day);
+        $("dpFill").style.width = (s.total ? Math.round((s.done / s.total) * 100) : 0) + "%";
+        $("dpText").textContent = s.done + " / " + s.total + " クリア";
+
+        tasksEl.innerHTML = "";
+        day.tasks.forEach(function (t, i) {
+          var id = taskId(day.date, i);
+          var st = SUBJECT_STYLE[t[2]] || SUBJECT_STYLE["その他"];
+          var xp = xpFor(t[0], t[1]);
+          var card = document.createElement("div");
+          card.className = "task" + (state.checked[id] ? " checked" : "");
+          var cbId = "cb-" + day.date + "-" + i;
+          card.innerHTML =
+            '<div class="bar" style="background:' + st.bar + '"></div>' +
+            "<label for=\"" + cbId + "\">" +
+              '<input type="checkbox" id="' + cbId + '"' + (state.checked[id] ? " checked" : "") + " />" +
+              '<span class="body">' +
+                '<span class="meta">' +
+                  '<span class="time">' + t[0] + "–" + t[1] + "</span>" +
+                  '<span class="subj" style="background:' + st.bg + ";color:" + st.fg + '">' + t[2] + "</span>" +
+                "</span>" +
+                '<span class="title" style="display:block">' + t[3] + "</span>" +
+              "</span>" +
+              '<span class="xp">+' + xp + " XP</span>" +
+            "</label>";
+          var input = card.querySelector("input");
+          input.addEventListener("change", function () { onToggle(day, i, input); });
+          tasksEl.appendChild(card);
+        });
+
+        var banner = $("clearBanner");
+        if (s.clear) {
+          banner.classList.add("show");
+          $("clearSub").textContent = "この日のタスクを全部クリア！ +" + s.xp + " XP ゲット。おつかれさま！";
+        } else {
+          banner.classList.remove("show");
+        }
+      }
+
+      function renderAll() { renderStatus(); renderChips(); renderDay(); }
+
+      /* ================= interactions ================= */
+      var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function floatXp(x, y, xp) {
+        if (reducedMotion) return;
+        var el = document.createElement("div");
+        el.className = "xp-float";
+        el.textContent = "+" + xp + " XP";
+        el.style.left = Math.max(8, x - 30) + "px";
+        el.style.top = Math.max(8, y - 44) + "px";
+        document.body.appendChild(el);
+        setTimeout(function () { el.remove(); }, 950);
+      }
+
+      function onToggle(day, i, input) {
+        var id = taskId(day.date, i);
+        var beforeLv = levelFor(totalXp()).level;
+        var wasClear = dayStats(day).clear;
+        if (input.checked) state.checked[id] = true; else delete state.checked[id];
+        save();
+
+        var card = input.closest(".task");
+        if (card) card.classList.toggle("checked", input.checked);
+
+        if (input.checked) {
+          var r = input.getBoundingClientRect();
+          floatXp(r.left + r.width / 2, r.top, xpFor(day.tasks[i][0], day.tasks[i][1]));
+        }
+        renderStatus(); renderChips();
+        var s = dayStats(day);
+        $("dpFill").style.width = (s.total ? Math.round((s.done / s.total) * 100) : 0) + "%";
+        $("dpText").textContent = s.done + " / " + s.total + " クリア";
+        var banner = $("clearBanner");
+        if (s.clear) {
+          banner.classList.add("show");
+          $("clearSub").textContent = "この日のタスクを全部クリア！ +" + s.xp + " XP ゲット。おつかれさま！";
+          if (!wasClear) fireConfetti();
+        } else {
+          banner.classList.remove("show");
+        }
+        var afterLv = levelFor(totalXp());
+        if (afterLv.level > beforeLv) {
+          $("levelUpText").textContent = "Lv." + afterLv.level + "「" + afterLv.name + "」になった！";
+          $("levelOverlay").classList.add("show");
+        }
+      }
+
+      /* confetti */
+      function fireConfetti() {
+        if (reducedMotion) return;
+        var cv = $("confetti"), ctx = cv.getContext("2d");
+        cv.width = window.innerWidth; cv.height = window.innerHeight;
+        cv.classList.add("show");
+        var colors = ["#ffb020", "#2f7df6", "#22b573", "#db2777", "#9333ea", "#ff8a3d"];
+        var parts = [];
+        for (var i = 0; i < 130; i++) {
+          parts.push({
+            x: Math.random() * cv.width,
+            y: -20 - Math.random() * cv.height * 0.35,
+            w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
+            vy: 2.2 + Math.random() * 3.2, vx: -1.4 + Math.random() * 2.8,
+            rot: Math.random() * Math.PI, vr: -0.12 + Math.random() * 0.24,
+            color: colors[i % colors.length]
+          });
+        }
+        var start = null;
+        function frame(ts) {
+          if (!start) start = ts;
+          ctx.clearRect(0, 0, cv.width, cv.height);
+          parts.forEach(function (p) {
+            p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+            ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+          });
+          if (ts - start < 2600) requestAnimationFrame(frame);
+          else { ctx.clearRect(0, 0, cv.width, cv.height); cv.classList.remove("show"); }
+        }
+        requestAnimationFrame(frame);
+      }
+
+      /* buttons & overlays */
+      $("btnToday").addEventListener("click", function () {
+        var tKey = todayKey();
+        selected = PLAN.some(function (d) { return d.date === tKey; })
+          ? tKey
+          : (tKey < PLAN[0].date ? PLAN[0].date : PLAN[PLAN.length - 1].date);
+        renderAll();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      $("btnGuide").addEventListener("click", function () { $("guideOverlay").classList.add("show"); });
+      $("btnStart").addEventListener("click", function () {
+        state.guided = true; save();
+        $("guideOverlay").classList.remove("show");
+      });
+      $("btnLevelOk").addEventListener("click", function () { $("levelOverlay").classList.remove("show"); });
+      $("btnReset").addEventListener("click", function () { $("resetOverlay").classList.add("show"); });
+      $("btnResetCancel").addEventListener("click", function () { $("resetOverlay").classList.remove("show"); });
+      $("btnResetOk").addEventListener("click", function () {
+        state.checked = {};
+        save();
+        $("resetOverlay").classList.remove("show");
+        renderAll();
+      });
+      ["guideOverlay", "levelOverlay", "resetOverlay"].forEach(function (id) {
+        $(id).addEventListener("click", function (e) {
+          if (e.target === this) this.classList.remove("show");
+        });
+      });
+
+      renderAll();
+      if (!state.guided) $("guideOverlay").classList.add("show");
+    </script>
+  </body>
+</html>
