@@ -310,6 +310,32 @@
       .btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
       .settings .note { font-size: 12px; font-weight: 700; color: var(--ink-sub); margin-top: 12px; line-height: 1.6; }
 
+      /* ---------- auth bar ---------- */
+      .auth-bar {
+        background: var(--card);
+        border: 3px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      }
+      .auth-bar .auth-status { flex: 1 1 auto; min-width: 140px; font-size: 12.5px; font-weight: 700; color: var(--ink-sub); line-height: 1.5; }
+      .auth-bar .auth-status b { color: var(--ink); }
+      .btn-google {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #fff; color: #22304a;
+        border: 3px solid var(--line); border-radius: 999px;
+        font-size: 14px; font-weight: 800; padding: 8px 16px; min-height: 44px;
+      }
+      .btn-google svg { flex: 0 0 auto; }
+      .user-chip { display: none; align-items: center; gap: 9px; flex-wrap: wrap; }
+      .user-chip.show { display: flex; }
+      .user-chip img { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); object-fit: cover; background: var(--card-soft); }
+      .user-chip .user-name { font-size: 14px; font-weight: 800; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sync-note { font-size: 11px; font-weight: 700; color: var(--good); }
+      .sync-note.saving { color: var(--ink-sub); }
+
       /* ---------- overlays ---------- */
       .overlay {
         position: fixed; inset: 0; z-index: 80;
@@ -352,9 +378,27 @@
         .clear-banner.show, .sheet { animation: none; }
       }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   </head>
   <body>
     <div class="wrap">
+      <!-- auth bar -->
+      <div class="auth-bar" aria-label="アカウント">
+        <div class="auth-status" id="authStatus">☁️ <b>未ログイン</b><br />チェックはこの端末に保存中です</div>
+        <button class="btn-google" id="btnLogin" type="button">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+          Googleでログイン
+        </button>
+        <div class="user-chip" id="userChip">
+          <img id="userPhoto" alt="" referrerpolicy="no-referrer" />
+          <span class="user-name" id="userName"></span>
+          <span class="sync-note" id="syncNote">☁️ 同期済み</span>
+          <button class="btn" id="btnLogout" type="button" style="min-height:40px;padding:6px 14px;font-size:13px;">ログアウト</button>
+        </div>
+      </div>
+
       <!-- status header -->
       <section class="status" aria-label="ステータス">
         <div class="status-top">
@@ -413,7 +457,7 @@
           <button class="btn" id="btnGuide" type="button">❓ 使い方</button>
           <button class="btn danger" id="btnReset" type="button">全チェックをリセット</button>
         </div>
-        <p class="note">チェック状態はこの端末のブラウザに保存されます。別の端末・ブラウザでは引き継がれません。</p>
+        <p class="note" id="storageNote">未ログイン時はチェック状態はこの端末のブラウザに保存されます。Googleでログインするとクラウドに保存され、他のデバイスでも続きから使えます。</p>
       </section>
     </div>
 
@@ -428,6 +472,7 @@
           <div><span class="n">2</span><span>終わったタスクの丸をタップしてチェック！時間に応じてXPがもらえる（短いタスク10XP／30分〜20XP／50分〜30XP）</span></div>
           <div><span class="n">3</span><span>XPが貯まるとレベルアップ。「見習い」から「神戸大マスター」を目指そう</span></div>
           <div><span class="n">4</span><span>1日のタスクを全部チェックすると「QUEST CLEAR!」。毎日続けると連続クリア日数が伸びるよ</span></div>
+          <div><span class="n">5</span><span>上の「Googleでログイン」をすると、チェックがクラウドに保存されて他のスマホ・タブレットでも続きから使えるよ（ログインしなくてもこの端末で使える）</span></div>
         </div>
         <div class="row">
           <button class="btn primary" id="btnStart" type="button">クエスト開始！</button>
@@ -704,6 +749,126 @@
       function todayKey() { return toKey(new Date()); }
       function taskId(date, i) { return date + "#" + i; }
 
+      /* ================= Firebase (Google login + Firestore sync) ================= */
+      var firebaseConfig = {
+        apiKey: "AIzaSyDWQQC7Cnf-Gg7OMXJ2zu0Ux7uWle0OsN0",
+        authDomain: "study-quest-todo.firebaseapp.com",
+        projectId: "study-quest-todo",
+        storageBucket: "study-quest-todo.firebasestorage.app",
+        messagingSenderId: "855333738278",
+        appId: "1:855333738278:web:4bacb773a278096e3693e7"
+      };
+      var fbAuth = null, fbDb = null, currentUser = null, cloudSaveTimer = null;
+      try {
+        if (window.firebase && window.firebase.initializeApp) {
+          if (!window.firebase.apps || !window.firebase.apps.length) window.firebase.initializeApp(firebaseConfig);
+          fbAuth = window.firebase.auth ? window.firebase.auth() : null;
+          fbDb = window.firebase.firestore ? window.firebase.firestore() : null;
+        }
+      } catch (e) { fbAuth = null; fbDb = null; }
+      function stateDocRef() {
+        if (!fbDb || !currentUser) return null;
+        try { return fbDb.collection("users").doc(currentUser.uid).collection("state").doc("app"); } catch (e) { return null; }
+      }
+      function xpFromChecked(checked) {
+        var sum = 0;
+        if (!checked) return 0;
+        PLAN.forEach(function (d) {
+          d.tasks.forEach(function (t, i) {
+            if (checked[taskId(d.date, i)]) sum += xpFor(t[0], t[1]);
+          });
+        });
+        return sum;
+      }
+      function setSyncNote(text, saving) {
+        var el = document.getElementById("syncNote");
+        if (el) { el.textContent = text; el.className = "sync-note" + (saving ? " saving" : ""); }
+      }
+      function saveToCloud() {
+        var ref = stateDocRef();
+        if (!ref || !currentUser) return;
+        setSyncNote("☁️ 保存中…", true);
+        var payload = {
+          checked: state.checked || {},
+          guided: !!state.guided,
+          totalXp: xpFromChecked(state.checked),
+          stateJson: JSON.stringify(state),
+          updatedAt: (window.firebase && window.firebase.firestore && window.firebase.firestore.FieldValue)
+            ? window.firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
+        };
+        ref.set(payload, { merge: true }).then(function () {
+          setSyncNote("☁️ 同期済み", false);
+        }).catch(function () {
+          /* offline / rule error: keep local copy, do not block use */
+          setSyncNote("☁️ オフライン（端末に保存済み）", true);
+        });
+      }
+      function scheduleCloudSave() {
+        if (!currentUser || !fbDb) return;
+        setSyncNote("☁️ 保存中…", true);
+        if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+        cloudSaveTimer = setTimeout(saveToCloud, 700);
+      }
+      function loadFromCloudAndMerge() {
+        var ref = stateDocRef();
+        if (!ref) return;
+        ref.get().then(function (doc) {
+          var cloudState = null;
+          if (doc && doc.exists) {
+            var data = doc.data() || {};
+            if (data.stateJson) {
+              try { cloudState = JSON.parse(data.stateJson); } catch (e) { cloudState = null; }
+            }
+            if (!cloudState && data.checked) cloudState = { checked: data.checked, guided: !!data.guided };
+          }
+          if (cloudState && cloudState.checked) {
+            var localXpVal = xpFromChecked(state.checked);
+            var cloudXpVal = xpFromChecked(cloudState.checked);
+            if (cloudXpVal >= localXpVal) {
+              /* cloud wins (covers "cloud exists -> prefer cloud" and larger-XP rule) */
+              state.checked = cloudState.checked || {};
+              state.guided = !!(cloudState.guided || state.guided);
+              saveLocal();
+              if (typeof renderAll === "function") renderAll();
+              setSyncNote("☁️ 同期済み", false);
+            } else {
+              /* local has more progress: keep local and push it up */
+              saveToCloud();
+              if (typeof renderAll === "function") renderAll();
+            }
+          } else {
+            /* no cloud data yet: first upload of local state */
+            saveToCloud();
+          }
+        }).catch(function () {
+          setSyncNote("☁️ オフライン（端末に保存済み）", true);
+        });
+      }
+      function updateAuthUI() {
+        var statusEl = document.getElementById("authStatus");
+        var loginBtn = document.getElementById("btnLogin");
+        var chip = document.getElementById("userChip");
+        var noteEl = document.getElementById("storageNote");
+        if (currentUser) {
+          if (statusEl) statusEl.innerHTML = "☁️ <b>ログイン中</b><br />チェックはクラウドに同期されます";
+          if (loginBtn) loginBtn.style.display = "none";
+          if (chip) chip.classList.add("show");
+          var nameEl = document.getElementById("userName");
+          var photoEl = document.getElementById("userPhoto");
+          if (nameEl) nameEl.textContent = currentUser.displayName || currentUser.email || "ログイン中";
+          if (photoEl) {
+            if (currentUser.photoURL) { photoEl.src = currentUser.photoURL; photoEl.style.display = ""; }
+            else photoEl.style.display = "none";
+          }
+          if (noteEl) noteEl.textContent = "ログイン中：チェック状態はクラウド（Firestore）に保存され、他のデバイスでも続きから使えます。ログアウトしても、この端末のデータは残ります。";
+        } else {
+          if (statusEl) statusEl.innerHTML = "☁️ <b>未ログイン</b><br />チェックはこの端末に保存中です";
+          if (loginBtn) loginBtn.style.display = "";
+          if (chip) chip.classList.remove("show");
+          if (noteEl) noteEl.textContent = "未ログイン時はチェック状態はこの端末のブラウザに保存されます。Googleでログインするとクラウドに保存され、他のデバイスでも続きから使えます。";
+        }
+      }
+
       /* ================= state (localStorage) ================= */
       var LS_KEY = "benkyo-quest-public-v1";
       var state = { checked: {}, guided: false };
@@ -717,8 +882,12 @@
           }
         }
       } catch (e) { /* storage unavailable: run in-memory only */ }
-      function save() {
+      function saveLocal() {
         try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+      }
+      function save() {
+        saveLocal();
+        scheduleCloudSave();
       }
 
       /* ================= derived stats ================= */
@@ -969,6 +1138,44 @@
           if (e.target === this) this.classList.remove("show");
         });
       });
+
+      /* auth wiring (login is optional; local use works without it) */
+      (function wireAuth() {
+        var loginBtn = $("btnLogin"), logoutBtn = $("btnLogout");
+        if (loginBtn) loginBtn.addEventListener("click", function () {
+          if (!fbAuth) {
+            var s = $("authStatus");
+            if (s) s.innerHTML = "☁️ <b>ログインできませんでした</b><br />通信を確認して、もう一度お試しください（端末保存で利用できます）";
+            return;
+          }
+          try {
+            var provider = new window.firebase.auth.GoogleAuthProvider();
+            fbAuth.signInWithPopup(provider).catch(function (err) {
+              /* only fall back to redirect when the popup was blocked; closing it just stays local */
+              if (err && err.code === "auth/popup-blocked") {
+                try { fbAuth.signInWithRedirect(provider); } catch (e) { /* stay on local mode quietly */ }
+              }
+            });
+          } catch (e) { /* stay on local mode quietly */ }
+        });
+        if (logoutBtn) logoutBtn.addEventListener("click", function () {
+          if (!fbAuth) return;
+          fbAuth.signOut().catch(function () {});
+        });
+        if (fbAuth && fbAuth.onAuthStateChanged) {
+          try {
+            /* consume redirect result quietly if present */
+            if (fbAuth.getRedirectResult) fbAuth.getRedirectResult().catch(function () {});
+          } catch (e) {}
+          fbAuth.onAuthStateChanged(function (user) {
+            currentUser = user || null;
+            updateAuthUI();
+            if (currentUser) loadFromCloudAndMerge();
+          }, function () { currentUser = null; updateAuthUI(); });
+        } else {
+          updateAuthUI();
+        }
+      })();
 
       renderAll();
       if (!state.guided) $("guideOverlay").classList.add("show");
