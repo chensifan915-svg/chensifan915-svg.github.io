@@ -108,6 +108,103 @@
         transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
       }
       .xpbar-note { font-size: 11.5px; font-weight: 700; color: var(--ink-sub); margin-top: 5px; }
+      /* ---------- pixel avatar ---------- */
+      .avatar-wrap {
+        flex: 0 0 auto;
+        background: none; border: none; padding: 0; min-height: 0;
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .avatar-frame {
+        position: relative;
+        width: 76px; height: 76px;
+        border-radius: 18px;
+        border: 3px solid var(--line);
+        background:
+          radial-gradient(rgba(47, 125, 246, 0.14) 1.6px, transparent 1.7px),
+          var(--card-soft);
+        background-size: 11px 11px, auto;
+        box-shadow: 0 0 16px rgba(255, 176, 32, 0.4), var(--shadow);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+      }
+      .avatar-art { display: block; animation: avatarFloat 2.6s ease-in-out infinite; line-height: 0; }
+      .avatar-art svg { image-rendering: pixelated; display: block; }
+      @keyframes avatarFloat {
+        0%, 100% { transform: translateY(1.5px); }
+        50% { transform: translateY(-2.5px); }
+      }
+      .avatar-sparkle {
+        position: absolute; top: 3px; right: 6px;
+        font-size: 12px; color: var(--accent);
+        animation: sparklePulse 1.8s ease-in-out infinite;
+        pointer-events: none;
+      }
+      @keyframes sparklePulse {
+        0%, 100% { opacity: 0.25; transform: scale(0.8) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.2) rotate(20deg); }
+      }
+      .avatar-name {
+        font-size: 11px; font-weight: 800; color: var(--ink);
+        background: #fff3d6; border: 2px solid #ffd97a; color: #8a5a00;
+        border-radius: 999px; padding: 1px 9px; line-height: 1.5; white-space: nowrap;
+      }
+      @media (prefers-color-scheme: dark) {
+        .avatar-name { background: #3d3418; border-color: #8a6d1f; color: #ffd97a; }
+      }
+      .evo-strip {
+        margin-top: 12px;
+        background: var(--card-soft);
+        border: 2px dashed var(--line);
+        border-radius: 999px;
+        padding: 6px 12px;
+        text-align: center;
+        font-size: 12px; font-weight: 800; color: var(--ink-sub);
+      }
+      .evo-strip b { color: var(--xp); }
+      @media (max-width: 480px) {
+        .status-top { gap: 10px; }
+        .avatar-frame { width: 64px; height: 64px; border-radius: 15px; }
+        .level-badge { width: 60px; height: 60px; }
+        .level-badge .lv-num { font-size: 24px; }
+        .level-name { font-size: 16.5px; }
+      }
+      /* evolution encyclopedia */
+      .evo-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 16px; text-align: left; }
+      .evo-item {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--card-soft);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 8px 12px 8px 8px;
+      }
+      .evo-item .evo-thumb {
+        flex: 0 0 auto; width: 52px; height: 52px;
+        border-radius: 12px; border: 2px solid var(--line);
+        background: var(--card);
+        display: flex; align-items: center; justify-content: center;
+        line-height: 0;
+      }
+      .evo-item .evo-thumb svg { image-rendering: pixelated; display: block; }
+      .evo-item .evo-info { flex: 1 1 auto; min-width: 0; }
+      .evo-item .evo-form-name { font-size: 15px; font-weight: 800; line-height: 1.3; }
+      .evo-item .evo-req { font-size: 11.5px; font-weight: 700; color: var(--ink-sub); }
+      .evo-item .evo-state { flex: 0 0 auto; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+      .evo-item.current { border-color: var(--accent); box-shadow: 0 0 12px rgba(255, 176, 32, 0.45); }
+      .evo-item.current .evo-state { background: var(--accent); color: #4a2f00; }
+      .evo-item.unlocked .evo-state { background: #e3f6ec; color: #0d7a47; border: 1.5px solid #9fe3c0; }
+      .evo-item.locked .evo-state { background: var(--card); color: var(--ink-sub); border: 1.5px solid var(--line); }
+      .evo-item.locked .evo-form-name { color: var(--ink-sub); }
+      @media (prefers-color-scheme: dark) {
+        .evo-item.unlocked .evo-state { background: #173d2a; color: #7fe6b2; border-color: #2c6b47; }
+      }
+      .evo-next-note { font-size: 13.5px; font-weight: 800; color: var(--ink); margin: 0 0 14px; }
+      .evo-next-note b { color: var(--xp); }
+      /* evolution celebration */
+      .evo-big-art { display: flex; justify-content: center; margin: 6px 0 2px; line-height: 0; animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+      .evo-big-art svg { image-rendering: pixelated; display: block; filter: drop-shadow(0 0 14px rgba(255, 176, 32, 0.65)); }
+      .evo-sparkles { font-size: 20px; letter-spacing: 0.35em; color: var(--accent); animation: sparklePulse 1.2s ease-in-out infinite; }
+
       .status-stats { display: flex; gap: 10px; margin-top: 14px; }
       .stat {
         flex: 1 1 0;
@@ -455,6 +552,7 @@
       @media (prefers-reduced-motion: reduce) {
         .xpbar > div, .day-progress .dp-bar > div, .task input[type="checkbox"]::after { transition: none; }
         .xp-float { animation-duration: 0.01s; }
+        .avatar-art, .avatar-sparkle, .evo-big-art, .evo-sparkles { animation: none; }
         .clear-banner.show, .sheet, .overlay .sheet.detail-sheet { animation: none; }
       }
     </style>
@@ -482,6 +580,13 @@
       <!-- status header -->
       <section class="status" aria-label="ステータス">
         <div class="status-top">
+          <button class="avatar-wrap" id="avatarBtn" type="button" aria-label="アバターの進化図鑑を開く">
+            <span class="avatar-frame">
+              <span class="avatar-art" id="avatarArt" aria-hidden="true"></span>
+              <span class="avatar-sparkle" aria-hidden="true">✦</span>
+            </span>
+            <span class="avatar-name" id="avatarName">たまご</span>
+          </button>
           <div class="level-badge">
             <span class="lv-label">LEVEL</span>
             <span class="lv-num" id="lvNum">1</span>
@@ -493,6 +598,7 @@
             <div class="xpbar-note" id="xpNote">次のレベルまで あと100 XP</div>
           </div>
         </div>
+        <div class="evo-strip" id="evoNextNote">次の進化まで あと<b>300 XP</b></div>
         <div class="status-stats">
           <div class="stat">
             <div class="stat-num"><span class="flame">🔥</span> <span id="streak">0</span><small>日</small></div>
@@ -550,7 +656,7 @@
         <div class="howto">
           <div><span class="n">1</span><span>上の日付チップで日を選ぶ（今日が最初に開くよ）</span></div>
           <div><span class="n">2</span><span>終わったタスクの丸をタップしてチェック！時間に応じてXPがもらえる（短いタスク10XP／30分〜20XP／50分〜30XP）</span></div>
-          <div><span class="n">3</span><span>XPが貯まるとレベルアップ。「見習い」から「神戸大マスター」を目指そう</span></div>
+          <div><span class="n">3</span><span>XPが貯まるとレベルアップ。「見習い」から「神戸大マスター」を目指そう。左上のドット絵アバターもレベルで進化するよ（タップで進化図鑑）</span></div>
           <div><span class="n">4</span><span>1日のタスクを全部チェックすると「QUEST CLEAR!」。毎日続けると連続クリア日数が伸びるよ</span></div>
           <div><span class="n">5</span><span>上の「Googleでログイン」をすると、チェックがクラウドに保存されて他のスマホ・タブレットでも続きから使えるよ（ログインしなくてもこの端末で使える）</span></div>
         </div>
@@ -609,6 +715,33 @@
         <div class="detail-actions">
           <button class="btn primary" id="btnDetailToggle" type="button">✓ クリアにする</button>
           <button class="btn" id="btnDetailBack" type="button">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- avatar evolution encyclopedia -->
+    <div class="overlay" id="evoOverlay" role="dialog" aria-modal="true" aria-labelledby="evoTitle">
+      <div class="sheet">
+        <div class="sheet-emoji">🥚➡️🐉</div>
+        <h2 id="evoTitle">アバター進化図鑑</h2>
+        <p>XPを貯めてレベルが上がると、相棒が進化するよ。</p>
+        <div class="evo-list" id="evoList"></div>
+        <p class="evo-next-note" id="evoNextText"></p>
+        <div class="row">
+          <button class="btn primary" id="btnEvoClose" type="button">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- evolution celebration -->
+    <div class="overlay" id="evolutionOverlay" role="dialog" aria-modal="true">
+      <div class="sheet">
+        <div class="evo-sparkles" aria-hidden="true">✦ ✦ ✦</div>
+        <h2>✨ 進化した！ ✨</h2>
+        <div class="evo-big-art" id="evolvedArt" aria-hidden="true"></div>
+        <p id="evolutionText">アバターが「ひよこ」に進化した！</p>
+        <div class="row">
+          <button class="btn primary" id="btnEvolutionOk" type="button">すごい！</button>
         </div>
       </div>
     </div>
@@ -830,6 +963,101 @@
         "その他": { bg: "#fef9c3", fg: "#a16207", bar: "#eab308" }
       };
       var LEVEL_NAMES = ["見習い","かけだし冒険者","勉強戦士","集中マスター","問題解きの達人","努力の天才","受験マスター","神戸大マスター"];
+
+      /* ================= pixel avatar evolution =================
+         Form is derived from level/total XP only; saved state is unchanged. */
+      var AVATAR_STAGES = [
+        { minLevel: 1, name: "たまご", palette: { K: "#26324d", W: "#fffdf5", Y: "#ffb020", S: "#bcd6f2" }, art: [
+          "................","................",".......KK.......","......KWWK......",".....KWWWWK.....",".....KWYYWK.....","....KWWWWWWK....","....KWWWWWWK....","...KWWWWWWWWK...","...KWKWWWWWWK...","...KWWWWWWWWK...","...KWWWYYWWWK...","....KWWWWWWK....",".....KKKKKK.....",".......SS.......","................"
+        ]},
+        { minLevel: 3, name: "ひよこ", palette: { K: "#26324d", Y: "#ffd93d", D: "#f0ad12", O: "#ff8a3d", W: "#fff6d8" }, art: [
+          "................","......Y..Y......",".......YY.......","......YYYY......",".....YYYYYY.....","....YYYYYYYY....","...YYKYYYYKYY...","...YYYYOOYYYY...","....YYOOOOYY....","....YYYYYYYY....","...DYYYYYYYYD...","....YYYYYYYY....",".....YYYYYY.....","......YYYY......",".....OO..OO.....","................"
+        ]},
+        { minLevel: 5, name: "こねこ", palette: { K: "#26324d", O: "#ffa25e", D: "#e07f35", W: "#ffffff", P: "#ff8fab" }, art: [
+          "................","...K........K...","...KO......OK...","...KOO....OOK...","....OOOOOOOO....","...OOOOOOOOOO...","...OKOOOOOOKO...","...OOOOOOOOOO...","...OOOWPPWOOOO..","....OOOOOOOO....","....DOOOOOOD....",".....OOOOOO.....","....OOO..OOO....","....OOO..OOO....","................","................"
+        ]},
+        { minLevel: 8, name: "きつね", palette: { K: "#26324d", O: "#ff8a3d", D: "#d96a1e", W: "#fff6ea", P: "#ff8fab" }, art: [
+          "................","..K..........K..","..KOK......KOK..","..KOOK....KOOK..","...OOOOOOOOOO...","..OOOOOOOOOOOO..","..OOKOOOOOOKOO..","..OOOOOOOOOOOO..","...OOOWPPWOOO...","...OWWWWWWWWO...","....OWWWWWWO....",".....OOOOOO.....","....OOO..OOO....","...DDD....DDD...","................","................"
+        ]},
+        { minLevel: 12, name: "おおかみ", palette: { K: "#26324d", B: "#7d90b8", D: "#55688f", L: "#c7d3ea", W: "#ffffff" }, art: [
+          "................","..K..........K..","..KBK......KBK..","..KBBK....KBBK..","...BBBBBBBBBB...","..BBBBBBBBBBBB..","..BBKBBBBBBKBB..","...BBBBBBBBBB...","....BBWWWWBB....","....BWWKKWWB....",".....BWWWWB.....",".....BBBBBB.....","....BBBBBBBB....","...DDD....DDD...","................","................"
+        ]},
+        { minLevel: 18, name: "りゅう", palette: { K: "#26324d", G: "#2fbf8f", D: "#1f9d74", Y: "#ffd93d", W: "#dbeafe", L: "#ffe9a8" }, art: [
+          "................","..Y..........Y..","...Y........Y...","....GGGGGGGG....","...GGGGGGGGGG...","..WGGKGGGGKGGW..","..WWGGGGGGGGWW..","...GGGGGGGGGG...","....GGYYYYGG....","....GGYYYYGG....","...GGGGGGGGGG...","....GGGGGGGG....",".....G.GG.G.....","....DD.DD.DD....","................","................"
+        ]},
+        { minLevel: 25, name: "ほうおう", palette: { K: "#26324d", R: "#ff5a3d", O: "#ff8a3d", Y: "#ffd93d", W: "#fff3d6" }, art: [
+          ".......YY.......","......YRRY......",".......RR.......","......RRRR......","..R..RRRRRR..R..","..RR.RRRRRR.RR..","..RRRKRRRKRRR...","...RRRYYRRR.....","....RRRRRR......","...YRRRRRRY.....","....RRRRRR......","....R.RR.R......","...Y..RR..Y.....","..Y...RR...Y....",".......YY.......","................"
+        ]}
+      ];
+      function xpRequiredForLevel(lv) { return 100 * (lv - 1) * lv / 2; }
+      function stageIndexForLevel(level) {
+        var idx = 0;
+        AVATAR_STAGES.forEach(function (s, i) { if (level >= s.minLevel) idx = i; });
+        return idx;
+      }
+      function renderPixelArt(stage, size, silhouette) {
+        var html = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 16 16" aria-hidden="true" focusable="false">';
+        stage.art.forEach(function (row, y) {
+          for (var x = 0; x < row.length; x++) {
+            var ch = row.charAt(x);
+            if (ch === "." || ch === " ") continue;
+            var color = silhouette ? "#4a5a7d" : (stage.palette[ch] || "#26324d");
+            var op = silhouette ? ' opacity="0.6"' : "";
+            html += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="' + color + '"' + op + "/>";
+          }
+        });
+        return html + "</svg>";
+      }
+      function avatarInfo() {
+        var xp = totalXp();
+        var lv = levelFor(xp);
+        var idx = stageIndexForLevel(lv.level);
+        var next = idx + 1 < AVATAR_STAGES.length ? AVATAR_STAGES[idx + 1] : null;
+        return {
+          xp: xp, level: lv.level, index: idx, stage: AVATAR_STAGES[idx], next: next,
+          nextInXp: next ? xpRequiredForLevel(next.minLevel) - xp : 0
+        };
+      }
+      function renderAvatar() {
+        var info = avatarInfo();
+        var artEl = document.getElementById("avatarArt");
+        if (artEl) artEl.innerHTML = renderPixelArt(info.stage, 58, false);
+        var nameEl = document.getElementById("avatarName");
+        if (nameEl) nameEl.textContent = info.stage.name;
+        var noteEl = document.getElementById("evoNextNote");
+        if (noteEl) {
+          noteEl.innerHTML = info.next
+            ? "次の進化「" + info.next.name + "」（Lv." + info.next.minLevel + "）まで あと<b>" + info.nextInXp + " XP</b>"
+            : "🏆 最終形態「" + info.stage.name + "」に到達！";
+        }
+      }
+      function renderEvoList() {
+        var info = avatarInfo();
+        var list = document.getElementById("evoList");
+        if (!list) return;
+        list.innerHTML = "";
+        AVATAR_STAGES.forEach(function (s, i) {
+          var isCurrent = i === info.index;
+          var unlocked = i < info.index;
+          var locked = i > info.index;
+          var row = document.createElement("div");
+          row.className = "evo-item" + (isCurrent ? " current" : unlocked ? " unlocked" : " locked");
+          row.innerHTML =
+            '<span class="evo-thumb">' + renderPixelArt(s, 42, locked) + "</span>" +
+            '<span class="evo-info">' +
+              '<span class="evo-form-name">' + (locked ? "？？？" : s.name) + "</span><br />" +
+              '<span class="evo-req">Lv.' + s.minLevel + "〜で進化</span>" +
+            "</span>" +
+            '<span class="evo-state">' + (isCurrent ? "いまの姿" : unlocked ? "進化済み" : "まだ") + "</span>";
+          list.appendChild(row);
+        });
+        var nextEl = document.getElementById("evoNextText");
+        if (nextEl) {
+          nextEl.innerHTML = info.next
+            ? "あと <b>" + info.nextInXp + " XP</b> で「" + info.next.name + "」（Lv." + info.next.minLevel + "）に進化！"
+            : "🏆 最終形態に到達済み。おつかれさま！";
+        }
+      }
       var WEEKDAYS = ["日","月","火","水","木","金","土"];
       var TOTAL_TASKS = 0;
       PLAN.forEach(function (d) { TOTAL_TASKS += d.tasks.length; });
@@ -1054,6 +1282,7 @@
         if (today) { var s = dayStats(today); pct = today.tasks.length ? Math.round((s.done / s.total) * 100) : 0; }
         $("todayPct").textContent = pct;
         $("totalDone").textContent = totalDone();
+        renderAvatar();
       }
 
       function renderChips() {
@@ -1230,6 +1459,7 @@
       function onToggle(day, i, input) {
         var id = taskId(day.date, i);
         var beforeLv = levelFor(totalXp()).level;
+        var beforeStageIdx = stageIndexForLevel(beforeLv);
         var wasClear = dayStats(day).clear;
         if (input.checked) state.checked[id] = true; else delete state.checked[id];
         save();
@@ -1254,7 +1484,15 @@
           banner.classList.remove("show");
         }
         var afterLv = levelFor(totalXp());
-        if (afterLv.level > beforeLv) {
+        var afterStageIdx = stageIndexForLevel(afterLv.level);
+        if (afterStageIdx > beforeStageIdx) {
+          /* evolution gets its own celebration, separate from LEVEL UP */
+          var st = AVATAR_STAGES[afterStageIdx];
+          $("evolvedArt").innerHTML = renderPixelArt(st, 120, false);
+          $("evolutionText").textContent = "アバターが「" + st.name + "」に進化した！";
+          fireConfetti();
+          $("evolutionOverlay").classList.add("show");
+        } else if (afterLv.level > beforeLv) {
           $("levelUpText").textContent = "Lv." + afterLv.level + "「" + afterLv.name + "」になった！";
           $("levelOverlay").classList.add("show");
         }
@@ -1317,7 +1555,13 @@
         $("resetOverlay").classList.remove("show");
         renderAll();
       });
-      ["guideOverlay", "levelOverlay", "resetOverlay"].forEach(function (id) {
+      $("avatarBtn").addEventListener("click", function () {
+        renderEvoList();
+        $("evoOverlay").classList.add("show");
+      });
+      $("btnEvoClose").addEventListener("click", function () { $("evoOverlay").classList.remove("show"); });
+      $("btnEvolutionOk").addEventListener("click", function () { $("evolutionOverlay").classList.remove("show"); });
+      ["guideOverlay", "levelOverlay", "resetOverlay", "evoOverlay", "evolutionOverlay"].forEach(function (id) {
         $(id).addEventListener("click", function (e) {
           if (e.target === this) this.classList.remove("show");
         });
