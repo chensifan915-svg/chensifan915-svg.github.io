@@ -252,6 +252,85 @@
       .task.checked { opacity: 0.62; }
       .task.checked .title { text-decoration: line-through; text-decoration-thickness: 2px; }
       .task.checked .xp { color: var(--good); }
+      .task .detail-hint {
+        display: inline-flex; align-items: center; gap: 2px;
+        font-size: 11px; font-weight: 800; color: var(--ink-sub);
+        margin-top: 5px;
+      }
+      .task .detail-hint::after { content: "›"; font-size: 14px; line-height: 1; }
+
+      /* ---------- task detail sheet ---------- */
+      .detail-overlay {
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+      }
+      .detail-sheet {
+        text-align: left;
+        border-radius: 26px 26px 0 0;
+        border-bottom: none;
+        max-width: 560px;
+        padding: 14px 20px 22px;
+        max-height: 88vh;
+        animation: slideUp 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      @keyframes slideUp {
+        from { transform: translateY(48px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .detail-grab {
+        width: 44px; height: 5px; border-radius: 999px;
+        background: var(--line);
+        margin: 0 auto 12px;
+      }
+      .detail-close {
+        position: absolute; top: 12px; right: 12px;
+        width: 38px; height: 38px; min-height: 38px;
+        border-radius: 50%;
+        border: 2px solid var(--line);
+        background: var(--card-soft);
+        color: var(--ink);
+        font-size: 18px; font-weight: 800; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .detail-sheet { position: relative; }
+      .detail-topbar { height: 6px; border-radius: 999px; margin: 0 44px 14px 0; }
+      .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-right: 44px; }
+      .detail-title {
+        font-size: 19px; font-weight: 800; line-height: 1.5;
+        margin: 10px 0 4px;
+        word-break: break-word;
+      }
+      .detail-status { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+      .detail-status.done { color: var(--good); }
+      .detail-status.todo { color: var(--ink-sub); }
+      .detail-rows { margin: 10px 0 16px; border-top: 2px solid var(--line); }
+      .detail-row {
+        display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+        padding: 10px 2px;
+        border-bottom: 2px dashed var(--line);
+        font-size: 14px;
+      }
+      .detail-row dt { flex: 0 0 auto; font-weight: 800; color: var(--ink-sub); font-size: 12.5px; }
+      .detail-row dd { margin: 0; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+      .detail-row dd .xp-val { color: var(--xp); }
+      .detail-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .detail-actions .btn { flex: 1 1 auto; }
+      .btn.done-btn { background: var(--good); border-color: var(--good); color: #fff; }
+      .detail-howto {
+        background: var(--card-soft);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 12px 14px;
+        margin: 0 0 16px;
+      }
+      .detail-howto h3 { font-size: 13px; font-weight: 800; margin: 0 0 6px; color: var(--ink); }
+      .detail-howto p { font-size: 13.5px; font-weight: 700; color: var(--ink-sub); line-height: 1.75; margin: 0; }
+      @media (min-width: 640px) {
+        .detail-overlay { align-items: center; padding: 20px; }
+        .detail-sheet { border-radius: 26px; border-bottom: 3px solid var(--line); }
+        .detail-grab { display: none; }
+      }
 
       /* +XP float */
       .xp-float {
@@ -371,11 +450,12 @@
       .sheet .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
       #confetti { position: fixed; inset: 0; z-index: 70; pointer-events: none; display: none; }
       #confetti.show { display: block; }
+      .overlay .sheet.detail-sheet { animation: slideUp 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
 
       @media (prefers-reduced-motion: reduce) {
         .xpbar > div, .day-progress .dp-bar > div, .task input[type="checkbox"]::after { transition: none; }
         .xp-float { animation-duration: 0.01s; }
-        .clear-banner.show, .sheet { animation: none; }
+        .clear-banner.show, .sheet, .overlay .sheet.detail-sheet { animation: none; }
       }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -501,6 +581,34 @@
         <div class="row">
           <button class="btn" id="btnResetCancel" type="button">やめる</button>
           <button class="btn danger" id="btnResetOk" type="button">リセットする</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- task detail -->
+    <div class="overlay detail-overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="sheet detail-sheet">
+        <div class="detail-grab" aria-hidden="true"></div>
+        <button class="detail-close" id="btnDetailClose" type="button" aria-label="詳細を閉じる">×</button>
+        <div class="detail-topbar" id="detailTopbar"></div>
+        <div class="detail-tags" id="detailTags"></div>
+        <h2 class="detail-title" id="detailTitle">タスク詳細</h2>
+        <div class="detail-status" id="detailStatus"></div>
+        <dl class="detail-rows">
+          <div class="detail-row"><dt>日付</dt><dd id="detailDate">—</dd></div>
+          <div class="detail-row"><dt>時間</dt><dd id="detailTime">—</dd></div>
+          <div class="detail-row"><dt>所要時間</dt><dd id="detailDuration">—</dd></div>
+          <div class="detail-row"><dt>獲得XP</dt><dd id="detailXp">—</dd></div>
+          <div class="detail-row" id="detailPhaseRow"><dt>フェーズ</dt><dd id="detailPhase">—</dd></div>
+          <div class="detail-row" id="detailLabelRow"><dt>ラベル</dt><dd id="detailLabel">—</dd></div>
+        </dl>
+        <div class="detail-howto" id="detailHowto" hidden>
+          <h3>📝 やり方</h3>
+          <p id="detailHowtoText"></p>
+        </div>
+        <div class="detail-actions">
+          <button class="btn primary" id="btnDetailToggle" type="button">✓ クリアにする</button>
+          <button class="btn" id="btnDetailBack" type="button">閉じる</button>
         </div>
       </div>
     </div>
@@ -1010,11 +1118,18 @@
                   '<span class="subj" style="background:' + st.bg + ";color:" + st.fg + '">' + t[2] + "</span>" +
                 "</span>" +
                 '<span class="title" style="display:block">' + t[3] + "</span>" +
+                '<span class="detail-hint">タップで詳細</span>' +
               "</span>" +
               '<span class="xp">+' + xp + " XP</span>" +
             "</label>";
           var input = card.querySelector("input");
           input.addEventListener("change", function () { onToggle(day, i, input); });
+          var labelEl = card.querySelector("label");
+          labelEl.addEventListener("click", function (e) {
+            if (e.target === input) return;
+            e.preventDefault();
+            openDetail(day, i);
+          });
           tasksEl.appendChild(card);
         });
 
@@ -1028,6 +1143,75 @@
       }
 
       function renderAll() { renderStatus(); renderChips(); renderDay(); }
+
+      /* ================= task detail ================= */
+      var detailCtx = null;
+      function durationMin(start, end) {
+        function toMin(s) { var p = s.split(":"); return (+p[0]) * 60 + (+p[1]); }
+        return toMin(end) - toMin(start);
+      }
+      function howtoForTask(title) {
+        if (title.indexOf("代表問題チェック") !== -1) return "『基礎問題精講』1〜70番から、単元・型ごとに代表問題を1問ずつ選んで、解説を閉じて自力で解く。解けたらA、途中で止まったらB、解説を見ても曖昧ならCとメモ。全部は解かない。1問に長く止まらない。";
+        if (title.indexOf("A/B/C") !== -1) return "前の枠で解けなかった問題の解説を確認し、閉じて自力で再現する。再現できたらAに上げる。再現できないCは番号と単元をメモして残す（11/19〜25の補強で回収する）。";
+        if (title.indexOf("ターゲット") !== -1 || title.indexOf("単語") !== -1) return "ターゲット1900の指定範囲を、意味が言えない単語に印を付けながら進める。言えない単語だけ2周目を見る。";
+        if (title.indexOf("Vintage") !== -1) return "Unit 1の問題を解き直し、間違えた問題は解説で理由を確認する。";
+        if (title.indexOf("物理エッセンス") !== -1) return "指定番号から解き進める。最初に番号と単元が合っているか本で確認し、ずれていたら単元を優先。止まったら解説を見て、閉じて再現する。";
+        if (title.indexOf("セミナー化学") !== -1 || title.indexOf("セミナー") !== -1) return "指定番号の基本問題を解く。最初に番号と単元が合っているか確認。間違えた問題は解説を確認して印を付ける。";
+        if (title.indexOf("極限") !== -1) return "教科書の説明と例題を読み、例題は一度閉じて自分で再現してから練習問題へ。型は「等比数列の行き先」「一番大きい項で割る」「代入できる関数の極限」が中心。";
+        if (title.indexOf("微分係数") !== -1 || title.indexOf("導関数") !== -1 || title.indexOf("微分") !== -1) return "教科書の説明→例題の順。定義（極限の式）を自分の言葉で言えるか確認しながら進める。";
+        if (title.indexOf("予習") !== -1) return "予習は解き切らない。本文・問題を読んで、分からない所に印を付けるまで（英語20分／数学20〜25分で打ち切り）。";
+        if (title.indexOf("塾の復習") !== -1 || title.indexOf("授業の復習") !== -1) return "授業ノートを見直し、解けなかった問題だけ解き直す。";
+        if (title.indexOf("準備") !== -1 && title.indexOf("最終確認") !== -1) return "翌日の計画と持ち物を確認し、今日の分類・記録を見直して終える。";
+        if (title.indexOf("間違い") !== -1) return "間違えた問題の「単元・どこで止まったか」を記録し、翌日の最初に解き直す対象にする。";
+        return null;
+      }
+      function refreshDetailState() {
+        if (!detailCtx) return;
+        var day = detailCtx.day, i = detailCtx.index;
+        var id = taskId(day.date, i);
+        var done = !!state.checked[id];
+        var stEl = $("detailStatus");
+        stEl.textContent = done ? "✅ クリア済み" : "⬜ まだクリアしていない";
+        stEl.className = "detail-status " + (done ? "done" : "todo");
+        var btn = $("btnDetailToggle");
+        btn.textContent = done ? "チェックを外す" : "✓ クリアにする";
+        btn.className = "btn " + (done ? "" : "done-btn");
+        if (done) { btn.style.background = ""; btn.style.borderColor = ""; }
+      }
+      function openDetail(day, i) {
+        var t = day.tasks[i];
+        if (!t) return;
+        detailCtx = { day: day, index: i };
+        var st = SUBJECT_STYLE[t[2]] || SUBJECT_STYLE["その他"];
+        var xp = xpFor(t[0], t[1]);
+        var dt = parseDate(day.date);
+        $("detailTopbar").style.background = st.bar;
+        var tags = '<span class="subj" style="background:' + st.bg + ";color:" + st.fg + '">' + t[2] + "</span>";
+        if (day.phase) tags += '<span class="badge phase">' + day.phase + "</span>";
+        if (day.label) tags += '<span class="badge label">' + day.label + "</span>";
+        $("detailTags").innerHTML = tags;
+        $("detailTitle").textContent = t[3];
+        $("detailDate").textContent = (dt.getMonth() + 1) + "月" + dt.getDate() + "日（" + WEEKDAYS[dt.getDay()] + "）";
+        $("detailTime").textContent = t[0] + "–" + t[1];
+        $("detailDuration").textContent = durationMin(t[0], t[1]) + "分";
+        $("detailXp").innerHTML = '<span class="xp-val">+' + xp + " XP</span>";
+        var phaseRow = $("detailPhaseRow");
+        if (day.phase) { phaseRow.style.display = ""; $("detailPhase").textContent = day.phase; }
+        else phaseRow.style.display = "none";
+        var labelRow = $("detailLabelRow");
+        if (day.label) { labelRow.style.display = ""; $("detailLabel").textContent = day.label; }
+        else labelRow.style.display = "none";
+        var howto = howtoForTask(t[3]);
+        var howtoBox = $("detailHowto");
+        if (howto) { howtoBox.hidden = false; $("detailHowtoText").textContent = howto; }
+        else { howtoBox.hidden = true; $("detailHowtoText").textContent = ""; }
+        refreshDetailState();
+        $("detailOverlay").classList.add("show");
+      }
+      function closeDetail() {
+        $("detailOverlay").classList.remove("show");
+        detailCtx = null;
+      }
 
       /* ================= interactions ================= */
       var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1137,6 +1321,29 @@
         $(id).addEventListener("click", function (e) {
           if (e.target === this) this.classList.remove("show");
         });
+      });
+      $("btnDetailClose").addEventListener("click", closeDetail);
+      $("btnDetailBack").addEventListener("click", closeDetail);
+      $("detailOverlay").addEventListener("click", function (e) {
+        if (e.target === this) closeDetail();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && $("detailOverlay").classList.contains("show")) closeDetail();
+      });
+      $("btnDetailToggle").addEventListener("click", function () {
+        if (!detailCtx) return;
+        var day = detailCtx.day, i = detailCtx.index;
+        var input = document.getElementById("cb-" + day.date + "-" + i);
+        if (input) {
+          input.checked = !input.checked;
+          onToggle(day, i, input);
+        } else {
+          var id = taskId(day.date, i);
+          if (state.checked[id]) delete state.checked[id]; else state.checked[id] = true;
+          save();
+          renderAll();
+        }
+        refreshDetailState();
       });
 
       /* auth wiring (login is optional; local use works without it) */
