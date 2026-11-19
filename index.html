@@ -291,6 +291,45 @@
       }
       .day-progress .dp-text { font-size: 13px; font-weight: 800; color: var(--ink-sub); white-space: nowrap; }
 
+      /* ---------- belongings (pack) ---------- */
+      .pack {
+        background: var(--card);
+        border: 3px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 13px 14px 11px;
+        margin-bottom: 12px;
+      }
+      .pack-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .pack-title { font-size: 15px; font-weight: 800; margin: 0; }
+      .pack-count { font-size: 12px; font-weight: 800; color: var(--ink-sub); white-space: nowrap; }
+      .pack-count.all { color: var(--good); }
+      .pack-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .pack-item {
+        display: inline-flex; align-items: center; gap: 8px;
+        border: 2.5px solid var(--line);
+        background: var(--card-soft);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 6px 13px 6px 7px;
+        font-size: 13.5px; font-weight: 800;
+        min-height: 40px;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+      }
+      .pack-item .pack-box {
+        flex: 0 0 auto;
+        width: 24px; height: 24px; border-radius: 50%;
+        border: 2.5px solid var(--line);
+        background: var(--card);
+        display: grid; place-content: center;
+        font-size: 13px; font-weight: 800; color: #fff;
+        transition: background 0.2s, border-color 0.2s;
+      }
+      .pack-item.on { border-color: var(--good); background: var(--card); opacity: 0.75; }
+      .pack-item.on .pack-box { background: var(--good); border-color: var(--good); }
+      .pack-item.on .pack-name { text-decoration: line-through; text-decoration-thickness: 2px; }
+
       /* ---------- task cards ---------- */
       .tasks { display: flex; flex-direction: column; gap: 10px; }
       .task {
@@ -609,7 +648,7 @@
             <div class="stat-label">今日の達成率</div>
           </div>
           <div class="stat">
-            <div class="stat-num"><span id="totalDone">0</span><small>/141</small></div>
+            <div class="stat-num"><span id="totalDone">0</span><small>/143</small></div>
             <div class="stat-label">クリアしたタスク</div>
           </div>
         </div>
@@ -627,6 +666,15 @@
           <div class="dp-text" id="dpText"></div>
         </div>
       </div>
+
+      <!-- belongings -->
+      <section class="pack" aria-label="今日の持ち物">
+        <div class="pack-head">
+          <h2 class="pack-title">🎒 今日の持ち物</h2>
+          <span class="pack-count" id="packCount"></span>
+        </div>
+        <div class="pack-list" id="packList"></div>
+      </section>
 
       <section class="tasks" id="tasks"></section>
 
@@ -683,7 +731,7 @@
       <div class="sheet">
         <div class="sheet-emoji">⚠️</div>
         <h2>全チェックをリセットする？</h2>
-        <p>全27日・141タスクのチェックが全部外れて、XP・レベル・連続クリア日数も0に戻ります。元には戻せません。</p>
+        <p>全27日・143タスクのチェックが全部外れて、XP・レベル・連続クリア日数も0に戻ります。元には戻せません。</p>
         <div class="row">
           <button class="btn" id="btnResetCancel" type="button">やめる</button>
           <button class="btn danger" id="btnResetOk" type="button">リセットする</button>
@@ -764,13 +812,14 @@
           ["20:00","20:50","化学","化学 セミナー432番までの既習基本問題の復習"],
           ["20:55","21:25","その他","明日11/19の準備＋最終確認"]
         ]},
-        { date: "2026-11-19", phase: P1, label: null, tasks: [
-          ["15:30","16:20","数学","II・B基礎問題精講 三角関数の合成・加法定理の復習（〜70番）"],
-          ["16:35","17:20","数学","II・B 三角関数の基本問題を解き直す"],
-          ["18:00","18:40","数学III","数III教科書「極限」の基本例題"],
-          ["19:00","19:30","物理","物理エッセンス 力学114番以降"],
-          ["20:00","20:25","数学","数学の塾予習"],
-          ["20:25","20:45","英語","英単語301〜330"]
+        { date: "2026-11-19", phase: P1, label: "確定版", tasks: [
+          ["16:45","17:35","数学","数学II・B 三角関数（合成・加法定理）代表問題チェック"],
+          ["17:35","17:50","英語","英語 第9講 3日後復習"],
+          ["17:50","18:30","数学","基礎問題 解き直し"],
+          ["18:40","19:20","数学III","数III 数列の極限"],
+          ["19:30","20:00","物理","物理エッセンス 力学114〜"],
+          ["20:00","20:25","数学","金曜数学塾 予習"],
+          ["20:25","20:45","英語","ターゲット301〜330"]
         ]},
         { date: "2026-11-20", phase: P1, label: "塾=数学", tasks: [
           ["15:30","16:20","数学","II・B 三角関数の重要問題"],
@@ -791,6 +840,7 @@
           ["9:30","10:20","数学","II・B 三角関数の間違い直し"],
           ["10:30","11:15","物理","物理エッセンス 力学114番以降の復習"],
           ["11:15","11:30","英語","英単語391〜410"],
+          ["13:30","14:00","その他","共テプレ模試 自己採点＋Aリスト作成"],
           ["19:30","19:50","英語","英語の塾予習"]
         ]},
         { date: "2026-11-23", phase: P1, label: "塾=英語", tasks: [
@@ -1164,6 +1214,7 @@
               /* cloud wins (covers "cloud exists -> prefer cloud" and larger-XP rule) */
               state.checked = cloudState.checked || {};
               state.guided = !!(cloudState.guided || state.guided);
+              state.pack = cloudState.pack || state.pack || {};
               saveLocal();
               if (typeof renderAll === "function") renderAll();
               setSyncNote("☁️ 同期済み", false);
@@ -1207,7 +1258,7 @@
 
       /* ================= state (localStorage) ================= */
       var LS_KEY = "benkyo-quest-public-v1";
-      var state = { checked: {}, guided: false };
+      var state = { checked: {}, guided: false, pack: {} };
       try {
         var raw = localStorage.getItem(LS_KEY);
         if (raw) {
@@ -1215,6 +1266,7 @@
           if (parsed && typeof parsed === "object") {
             state.checked = parsed.checked || {};
             state.guided = !!parsed.guided;
+            state.pack = parsed.pack || {};
           }
         }
       } catch (e) { /* storage unavailable: run in-memory only */ }
@@ -1310,6 +1362,65 @@
         if (on) on.scrollIntoView({ block: "nearest", inline: "center" });
       }
 
+      /* ================= belongings (derived from the day's tasks) ================= */
+      var PACK_OVERRIDE = {
+        "2026-11-19": ["II・B基礎問題精講", "数III教科書", "物理エッセンス", "金曜数学塾テキスト", "ターゲット1900", "ノート/iPad", "筆記具"]
+      };
+      function belongingsFor(day) {
+        if (PACK_OVERRIDE[day.date]) return PACK_OVERRIDE[day.date].slice();
+        var items = [];
+        function add(x) { if (items.indexOf(x) === -1) items.push(x); }
+        var dow = parseDate(day.date).getDay();
+        day.tasks.forEach(function (t) {
+          var title = t[3], subj = t[2];
+          if (title.indexOf("数III基礎問題精講") !== -1) add("数III基礎問題精講");
+          else if (subj === "数学III" || title.indexOf("数III") !== -1) add("数III教科書");
+          if (title.indexOf("基礎問題精講") !== -1 && title.indexOf("数III") === -1) add("II・B基礎問題精講");
+          else if (title.indexOf("II・B") !== -1) add("II・B基礎問題精講");
+          if (subj === "物理" || title.indexOf("物理エッセンス") !== -1) add("物理のエッセンス");
+          if (subj === "化学" || title.indexOf("セミナー") !== -1) add("セミナー化学");
+          if (title.indexOf("ターゲット") !== -1 || title.indexOf("単語") !== -1) add("ターゲット1900");
+          if (title.indexOf("Vintage") !== -1) add("ヴィンテージ");
+          if (title.indexOf("模試") !== -1) add("模試の問題・解答");
+          if (subj === "塾") add(dow === 1 ? "塾テキスト（英語）" : dow === 5 ? "塾テキスト（数学）" : "塾テキスト");
+          if (title.indexOf("数学の塾予習") !== -1 || title.indexOf("金曜数学塾") !== -1) add("金曜数学塾テキスト");
+          if (title.indexOf("英語の塾予習") !== -1) add("月曜英語塾テキスト");
+        });
+        add("ノート/iPad");
+        add("筆記具");
+        return items;
+      }
+      function packId(date, i) { return date + "#p" + i; }
+      function renderPack(day) {
+        var listEl = $("packList"), countEl = $("packCount");
+        if (!listEl) return;
+        var items = belongingsFor(day);
+        if (!state.pack) state.pack = {};
+        var done = 0;
+        listEl.innerHTML = "";
+        items.forEach(function (name, i) {
+          var id = packId(day.date, i);
+          var on = !!state.pack[id];
+          if (on) done += 1;
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "pack-item" + (on ? " on" : "");
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+          b.innerHTML = '<span class="pack-box">' + (on ? "✓" : "") + '</span><span class="pack-name">' + name + "</span>";
+          b.addEventListener("click", function () {
+            if (state.pack[id]) delete state.pack[id]; else state.pack[id] = true;
+            save();
+            renderPack(day);
+          });
+          listEl.appendChild(b);
+        });
+        if (countEl) {
+          var all = done === items.length && items.length > 0;
+          countEl.textContent = all ? "🎒 準備完了！" : done + " / " + items.length + " 準備OK";
+          countEl.className = "pack-count" + (all ? " all" : "");
+        }
+      }
+
       function renderDay() {
         var day = null;
         PLAN.forEach(function (d) { if (d.date === selected) day = d; });
@@ -1328,6 +1439,8 @@
         var s = dayStats(day);
         $("dpFill").style.width = (s.total ? Math.round((s.done / s.total) * 100) : 0) + "%";
         $("dpText").textContent = s.done + " / " + s.total + " クリア";
+
+        renderPack(day);
 
         tasksEl.innerHTML = "";
         day.tasks.forEach(function (t, i) {
@@ -1382,14 +1495,17 @@
       function howtoForTask(title) {
         if (title.indexOf("代表問題チェック") !== -1) return "『基礎問題精講』1〜70番から、単元・型ごとに代表問題を1問ずつ選んで、解説を閉じて自力で解く。解けたらA、途中で止まったらB、解説を見ても曖昧ならCとメモ。全部は解かない。1問に長く止まらない。";
         if (title.indexOf("A/B/C") !== -1) return "前の枠で解けなかった問題の解説を確認し、閉じて自力で再現する。再現できたらAに上げる。再現できないCは番号と単元をメモして残す（11/19〜25の補強で回収する）。";
+        if (title.indexOf("自己採点") !== -1) return "共テプレ模試を自己採点して、間違いを A知識不足／B解法が浮かばない／C計算ミス／D時間不足 に分類し、Aの一覧（Aリスト）を作る。Aリストは次の補強計画の材料になる。";
         if (title.indexOf("ターゲット") !== -1 || title.indexOf("単語") !== -1) return "ターゲット1900の指定範囲を、意味が言えない単語に印を付けながら進める。言えない単語だけ2周目を見る。";
         if (title.indexOf("Vintage") !== -1) return "Unit 1の問題を解き直し、間違えた問題は解説で理由を確認する。";
+        if (title.indexOf("解き直し") !== -1) return "前の枠の代表問題チェックで解けなかった・途中で止まった問題を解き直す。解説を確認したら閉じて、自力で最後まで再現する。再現できたらA、まだ止まるならB/Cのまま番号と単元をメモして残す。";
         if (title.indexOf("物理エッセンス") !== -1) return "指定番号から解き進める。最初に番号と単元が合っているか本で確認し、ずれていたら単元を優先。止まったら解説を見て、閉じて再現する。";
         if (title.indexOf("セミナー化学") !== -1 || title.indexOf("セミナー") !== -1) return "指定番号の基本問題を解く。最初に番号と単元が合っているか確認。間違えた問題は解説を確認して印を付ける。";
         if (title.indexOf("極限") !== -1) return "教科書の説明と例題を読み、例題は一度閉じて自分で再現してから練習問題へ。型は「等比数列の行き先」「一番大きい項で割る」「代入できる関数の極限」が中心。";
         if (title.indexOf("微分係数") !== -1 || title.indexOf("導関数") !== -1 || title.indexOf("微分") !== -1) return "教科書の説明→例題の順。定義（極限の式）を自分の言葉で言えるか確認しながら進める。";
         if (title.indexOf("予習") !== -1) return "予習は解き切らない。本文・問題を読んで、分からない所に印を付けるまで（英語20分／数学20〜25分で打ち切り）。";
         if (title.indexOf("塾の復習") !== -1 || title.indexOf("授業の復習") !== -1) return "授業ノートを見直し、解けなかった問題だけ解き直す。";
+        if (title.indexOf("第9講") !== -1) return "英語 第9講の3日後復習。まずプリント・ノートを見ずに要点を思い出せるか試してから、曖昧な所だけ確認し、解けなかった問題を解き直す。";
         if (title.indexOf("準備") !== -1 && title.indexOf("最終確認") !== -1) return "翌日の計画と持ち物を確認し、今日の分類・記録を見直して終える。";
         if (title.indexOf("間違い") !== -1) return "間違えた問題の「単元・どこで止まったか」を記録し、翌日の最初に解き直す対象にする。";
         return null;
@@ -1551,6 +1667,7 @@
       $("btnResetCancel").addEventListener("click", function () { $("resetOverlay").classList.remove("show"); });
       $("btnResetOk").addEventListener("click", function () {
         state.checked = {};
+        state.pack = {};
         save();
         $("resetOverlay").classList.remove("show");
         renderAll();
