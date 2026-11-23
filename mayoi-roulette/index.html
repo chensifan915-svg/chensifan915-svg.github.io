@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f9f5e9">
+<meta name="description" content="迷ったときに、1〜10個の選択肢からルーレットやサイコロで抽選。">
+<title>まよいルーレット</title>
+<style>
+:root{color-scheme:light;--ink:#201d37;--paper:#f9f5e9;--line:#e6dfcf;--blue:#4238ce;--yellow:#ffce4e;--white:#fffdf6}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);background:radial-gradient(#dbd3bf 1px,transparent 1px) 0 0/16px 16px,var(--paper);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:600}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:disabled{cursor:default}
+button:focus-visible,select:focus-visible{outline:3px solid #087c72;outline-offset:3px}
+.shell{width:min(1090px,calc(100% - 48px));margin:auto}
+header{padding:20px 0;border-bottom:1px solid var(--line);background:var(--paper)}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:900;letter-spacing:.025em}
+.logo{display:grid;place-items:center;width:32px;height:32px;border:2px solid var(--ink);border-radius:10px;background:var(--yellow);box-shadow:2px 2px var(--ink);font-size:19px}
+.intro{margin:35px 0 24px}
+h1{margin:0;font-size:clamp(32px,5.1vw,60px);letter-spacing:-.07em;font-weight:950;line-height:1.18}
+h1 span{color:var(--blue)}
+.intro p{font-size:14px;margin:10px 0 0;color:#504961}
+.workspace{display:grid;grid-template-columns:minmax(0,1.38fr) minmax(0,1fr);gap:24px;align-items:start}
+.controls{grid-column:2;grid-row:1;display:grid;gap:13px}
+.stage{grid-column:1;grid-row:1;border:2px solid var(--ink);border-radius:25px;background:#fffaf0;box-shadow:5px 5px var(--ink);overflow:hidden}
+.stage-head{min-height:56px;display:flex;justify-content:space-between;align-items:center;padding:10px 19px;background:var(--white);border-bottom:2px solid var(--ink);font-weight:900;gap:10px}
+.stage-head span:first-child{display:flex;align-items:center;gap:8px}
+.dot{display:inline-block;width:11px;height:11px;border:2px solid var(--ink);border-radius:50%;background:#ff94b0}
+.odds{font-size:12px;color:#504961}
+.arena{position:relative;isolation:isolate;display:grid;place-items:center;min-height:337px;padding:20px 22px 12px;background:radial-gradient(#e4dac2 1px,transparent 1px) 0 0/16px 16px}
+.sprinkle{position:absolute;pointer-events:none;font-size:35px;line-height:1;font-weight:900;z-index:-1}
+.s1{top:18%;left:10%;color:#725cdd}.s2{bottom:17%;right:10%;color:#e05484}.s3{top:21%;right:12%;color:#e5a82d;font-size:24px}.s4{bottom:17%;left:13%;color:#309982;font-size:23px}
+.wheel-box{position:relative;width:min(100%,309px);aspect-ratio:1}
+canvas{width:100%;height:auto;display:block;transform:rotate(0deg);filter:drop-shadow(3px 5px 0 #201d37)}
+.pointer{position:absolute;left:50%;top:-3px;transform:translateX(-50%);width:26px;height:34px;background:var(--ink);clip-path:polygon(0 0,100% 0,50% 100%);z-index:1}
+.pointer::after{content:"";position:absolute;inset:3px 4px 7px;background:var(--yellow);clip-path:inherit}
+.face{display:grid;place-items:center;width:174px;height:174px;border:3px solid var(--ink);box-shadow:7px 7px var(--ink);font:900 86px/1 system-ui,sans-serif;background:#ffce4e;border-radius:32px;color:var(--ink)}
+.face[data-mode="cards"]{width:145px;height:197px;background:#ff99b6;border-radius:17px;transform:rotate(-7deg);outline:2px dashed var(--ink);outline-offset:-12px}
+.face[data-mode="slots"]{width:180px;height:130px;background:linear-gradient(#77bca9,#e4fbf0 24%,#e4fbf0 76%,#77bca9);border-radius:15px;outline:2px solid var(--ink);outline-offset:-12px}
+.face[data-mode="quick"]{border-radius:50%;background:#bbadff}
+.face.rolling{animation:bounce .22s alternate infinite}
+@keyframes bounce{to{translate:0 -10px;rotate:3deg}}
+[hidden]{display:none!important}
+.stage-foot{display:grid;gap:10px;padding:5px 19px 14px}
+.result{display:flex;align-items:center;justify-content:center;gap:8px;min-height:32px;margin:0;font-size:14px;text-align:center}
+.result strong{display:inline-grid;place-items:center;min-width:35px;height:31px;padding:0 7px;border-radius:8px;background:var(--yellow);font:900 22px/1 system-ui,sans-serif}
+.spin{min-height:56px;border:2px solid var(--ink);border-radius:13px;background:var(--yellow);box-shadow:3px 3px var(--ink);font-size:19px;font-weight:900;letter-spacing:.04em}
+.spin:hover:enabled{background:#ffdb76;transform:translateY(-1px)}
+.spin:active:enabled{transform:translate(3px,3px);box-shadow:none}
+.spin:disabled{opacity:.74}
+fieldset{min-width:0;margin:0;padding:13px 15px 15px;border:1.5px solid var(--ink);border-radius:16px;background:var(--white);box-shadow:3px 3px var(--ink)}
+h2{margin:0 0 9px;font-size:15px;line-height:1.5;font-weight:900}
+.count-head{display:flex;justify-content:space-between;align-items:baseline;gap:5px}
+.count-head output{font-size:13px;color:var(--blue)}
+.count,.speeds{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.count button,.speeds button,.mode{background:var(--white);border:1px solid #c8c0b3;border-radius:8px;min-height:36px;font-weight:900}
+.count button{font-family:system-ui,sans-serif}
+.count button[aria-pressed="true"],.speeds button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:white}
+.count button:hover:enabled,.speeds button:hover:enabled,.mode:hover:enabled{border-color:var(--blue)}
+.tip{margin:8px 0 0;font-size:11px;color:#504961}
+.modes{display:flex;flex-wrap:wrap;gap:6px}
+.mode{flex:1 0 27%;font-size:11px;white-space:nowrap;padding:4px 5px}
+.mode[aria-pressed="true"]{background:#eae5ff;border-color:var(--blue);color:#3327a5;box-shadow:inset 0 0 0 1px var(--blue)}
+.settings{display:grid;gap:9px}
+.setting-row{display:grid;grid-template-columns:58px minmax(0,1fr);gap:8px;align-items:center;font-size:12px}
+.speeds{grid-template-columns:repeat(3,minmax(0,1fr))}
+.speeds button{min-height:34px;font-size:11px;padding:0 2px}
+select{width:100%;min-height:34px;border:1px solid #c8c0b3;border-radius:8px;background:var(--white);padding:2px 8px}
+.recent{margin:25px 0 30px;display:flex;align-items:center;flex-wrap:wrap;gap:7px;color:#504961;font-size:12px}
+.recent b{margin-right:4px}
+#history{display:flex;flex-wrap:wrap;gap:5px}
+.history-item{display:inline-grid;place-items:center;min-width:27px;height:27px;padding:0 5px;border:1px solid #c8c0b3;border-radius:7px;background:var(--white);color:var(--ink);font-family:system-ui,sans-serif;font-weight:900}
+.spark{position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:2px;pointer-events:none;z-index:2;animation:pop .65s ease-out forwards}
+@keyframes pop{to{transform:translate(var(--x),var(--y)) rotate(220deg);opacity:0}}
+@media(max-width:735px){
+ .shell{width:calc(100% - 32px)}header{padding:12px 0}.intro{margin:22px 0 17px}.intro p{font-size:12px}
+ .workspace{display:flex;flex-direction:column;gap:13px}.controls{display:contents}
+ .stage,.controls fieldset{width:100%}.controls fieldset:first-child{order:-1}.stage{order:0}
+ .stage-head{min-height:40px;padding:5px 12px;font-size:13px}.odds{font-size:10px}
+ .arena{min-height:0;padding:10px 14px 5px}.wheel-box{width:min(66vw,226px)}
+ .stage-foot{padding:3px 11px 12px;gap:4px}.spin{min-height:48px;font-size:16px}.result{min-height:27px;font-size:12px}
+ fieldset{padding:8px 10px 10px}h2{margin-bottom:5px;font-size:13px}.count{grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
+ .count button{min-height:34px;padding:0;font-size:12px}.tip{margin-top:5px;font-size:10px}
+ .face{margin:16px 0}.recent{margin:18px 0 25px}
+}
+@media(max-width:355px){.count{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header><div class="shell brand"><span class="logo" aria-hidden="true">✦</span> まよいルーレット</div></header>
+<main class="shell">
+ <div class="intro"><h1>迷ったら、<span>回そう。</span></h1><p>選択肢の数を選ぶだけ。今日の「どれにしよう？」をひと回し。</p></div>
+ <div class="workspace">
+  <div class="controls">
+   <fieldset aria-labelledby="count-title">
+    <div class="count-head"><h2 id="count-title">選択肢の数</h2><output id="count-label">3 個</output></div>
+    <div class="count" id="count"></div>
+    <p class="tip">例　A・B・Cで迷ったら「3」。1が出たらA！</p>
+   </fieldset>
+   <fieldset aria-labelledby="modes-title">
+    <h2 id="modes-title">決め方</h2>
+    <div class="modes" id="modes"></div>
+   </fieldset>
+   <fieldset aria-labelledby="settings-title">
+    <h2 id="settings-title">設定</h2>
+    <div class="settings">
+     <div class="setting-row"><span id="speed-label">速度</span><div class="speeds" id="speeds" role="group" aria-labelledby="speed-label"></div></div>
+     <div class="setting-row"><label for="music">音楽</label><select id="music"><option value="off">オフ</option><option value="pop">ポップ</option><option value="arcade">アーケード</option><option value="chill">チル</option></select></div>
+    </div>
+   </fieldset>
+  </div>
+  <section class="stage" aria-labelledby="mode-title">
+   <div class="stage-head"><span><i class="dot" aria-hidden="true"></i><span id="mode-title">ルーレット</span></span><span class="odds" id="odds"></span></div>
+   <div class="arena" id="arena">
+    <span class="sprinkle s1" aria-hidden="true">✦</span><span class="sprinkle s2" aria-hidden="true">✧</span>
+    <span class="sprinkle s3" aria-hidden="true">✦</span><span class="sprinkle s4" aria-hidden="true">＋</span>
+    <div class="wheel-box" id="wheel-box" aria-hidden="true"><canvas id="wheel" width="640" height="640"></canvas><div class="pointer"></div></div>
+    <div class="face" id="face" aria-hidden="true" hidden>?</div>
+   </div>
+   <div class="stage-foot"><button class="spin" id="spin" type="button">回す</button><p class="result" id="result" role="status" aria-live="polite">どの番号が出るかな？</p></div>
+  </section>
+ </div>
+ <div class="recent" id="recent" hidden><b>最近の結果</b><span id="history"></span></div>
+</main>
+<script>
+"use strict";
+const modes = {
+  wheel: { label: "ルーレット", icon: "◎", action: "回す" },
+  dice: { label: "サイコロ", icon: "⚄", action: "サイコロを振る" },
+  cards: { label: "カード", icon: "▣", action: "カードを引く" },
+  slots: { label: "スロット", icon: "▥", action: "スロットを回す" },
+  quick: { label: "即決", icon: "✦", action: "今すぐ決める" }
+};
+const speeds = {
+  slow: { label: "ゆっくり", duration: 3900, turns: 4 },
+  normal: { label: "ふつう", duration: 2450, turns: 5 },
+  fast: { label: "速い", duration: 1150, turns: 5 }
+};
+const tracks = {
+  pop: { notes: [72, 76, 79, 76, 74, 77, 81, 77], gap: 155, wave: "sine" },
+  arcade: { notes: [60, 65, 67, 72, 67, 69, 72, 77], gap: 120, wave: "square" },
+  chill: { notes: [55, 62, 67, 69, 64, 67, 71, 67], gap: 240, wave: "triangle" }
+};
+const colors = ["#ffcc4e", "#ff9cb8", "#a7e0cc", "#bdb0ff", "#ffc19c", "#a5dfff", "#f7a488", "#d7e798", "#f6b2ea", "#b4c7fc"];
+const storageKey = "mayoi-roulette-v1";
+const $ = id => document.getElementById(id);
+const wheel = $("wheel"), context = wheel.getContext("2d"), face = $("face");
+const result = $("result"), spin = $("spin"), music = $("music");
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const countOptions = Array.from({ length: 10 }, (_, index) => [index + 1, String(index + 1)]);
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(storageKey)) || {}; } catch {}
+const state = {
+  count: Number.isInteger(saved.count) && saved.count >= 1 && saved.count <= 10 ? saved.count : 3,
+  mode: Object.hasOwn(modes, saved.mode) ? saved.mode : "wheel",
+  speed: Object.hasOwn(speeds, saved.speed) ? saved.speed : "normal",
+  music: Object.hasOwn(tracks, saved.music) ? saved.music : "off",
+  history: Array.isArray(saved.history) ? saved.history.filter(number => Number.isInteger(number) && number >= 1 && number <= 10).slice(0, 8) : []
+};
+let busy = false, rotation = 0, audio, musicTimer;
+
+function save() {
+  try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {}
+}
+
+function createButtons(container, entries, field) {
+  for (const [value, label, icon] of entries) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.value = value;
+    button.className = field === "mode" ? "mode" : "";
+    if (icon) {
+      const mark = document.createElement("span");
+      mark.setAttribute("aria-hidden", "true");
+      mark.textContent = icon + " ";
+      button.append(mark);
+    }
+    button.append(label);
+    button.addEventListener("click", () => {
+      if (busy || state[field] === value) return;
+      state[field] = value;
+      save();
+      if (field !== "speed") resetStage();
+      render();
+    });
+    container.append(button);
+  }
+}
+
+function drawWheel() {
+  const center = 320, radius = 302, step = Math.PI * 2 / state.count;
+  context.clearRect(0, 0, 640, 640);
+  context.lineJoin = "round";
+  for (let index = 0; index < state.count; index++) {
+    const angle = -Math.PI / 2 + step * index;
+    context.beginPath();
+    if (state.count > 1) context.moveTo(center, center);
+    context.arc(center, center, radius, angle - step / 2, angle + step / 2);
+    context.closePath();
+    context.fillStyle = colors[index];
+    context.fill();
+    if (state.count > 1) {
+      context.strokeStyle = "#201d37";
+      context.lineWidth = 4;
+      context.stroke();
+    }
+    context.save();
+    const labelRadius = state.count === 1 ? 115 : 204;
+    context.translate(center + Math.cos(angle) * labelRadius, center + Math.sin(angle) * labelRadius);
+    context.rotate(step * index);
+    context.font = "900 " + (state.count <= 5 ? 86 : 65) + "px system-ui, sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#201d37";
+    context.fillText(index + 1, 0, 4);
+    context.restore();
+  }
+  context.beginPath();
+  context.arc(center, center, radius, 0, Math.PI * 2);
+  context.lineWidth = 10;
+  context.strokeStyle = "#201d37";
+  context.stroke();
+  context.beginPath();
+  context.arc(center, center, 43, 0, Math.PI * 2);
+  context.fillStyle = "#fffaf0";
+  context.fill();
+  context.lineWidth = 7;
+  context.stroke();
+  context.fillStyle = "#4238ce";
+  context.font = "900 43px system-ui, sans-serif";
+  context.fillText("✦", 299, 334);
+}
+
+function resetStage() {
+  rotation = 0;
+  wheel.style.transition = "none";
+  wheel.style.transform = "rotate(0deg)";
+  face.textContent = "?";
+  result.textContent = "どの番号が出るかな？";
+}
+
+function render() {
+  for (const [id, field] of [["count", "count"], ["modes", "mode"], ["speeds", "speed"]]) {
+    for (const button of $(id).children) {
+      button.setAttribute("aria-pressed", String(button.value === String(state[field])));
+      button.disabled = busy;
+    }
+  }
+  spin.disabled = busy;
+  music.disabled = busy;
+  music.value = state.music;
+  $("count-label").textContent = state.count + " 個";
+  $("odds").textContent = state.count === 1 ? "1番が 100%" : "各番号 1/" + state.count;
+  $("mode-title").textContent = modes[state.mode].label;
+  spin.textContent = modes[state.mode].action;
+  $("wheel-box").hidden = state.mode !== "wheel";
+  face.hidden = state.mode === "wheel";
+  face.dataset.mode = state.mode;
+  drawWheel();
+  $("recent").hidden = state.history.length === 0;
+  $("history").replaceChildren(...state.history.map(number => {
+    const chip = document.createElement("span");
+    chip.className = "history-item";
+    chip.textContent = number;
+    return chip;
+  }));
+}
+
+function randomIndex(count) {
+  const sample = new Uint32Array(1);
+  const limit = 2 ** 32 - (2 ** 32 % count);
+  do { crypto.getRandomValues(sample); } while (sample[0] >= limit);
+  return sample[0] % count;
+}
+
+function tone(note, length, wave, volume, delay = 0) {
+  if (audio?.state !== "running") return;
+  const at = audio.currentTime + delay;
+  const oscillator = audio.createOscillator(), gain = audio.createGain();
+  oscillator.type = wave;
+  oscillator.frequency.value = 440 * 2 ** ((note - 69) / 12);
+  gain.gain.setValueAtTime(0.001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.001, at + length);
+  oscillator.connect(gain).connect(audio.destination);
+  oscillator.start(at);
+  oscillator.stop(at + length + 0.02);
+}
+
+function startMusic() {
+  const track = tracks[state.music];
+  if (!track) return;
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) return;
+  try {
+    audio ||= new Audio();
+    audio.resume().catch(() => {});
+    let beat = 0;
+    const play = () => tone(track.notes[beat++ % track.notes.length], 0.15, track.wave, 0.045);
+    play();
+    musicTimer = setInterval(play, track.gap);
+  } catch {}
+}
+
+function endMusic() {
+  clearInterval(musicTimer);
+  if (!tracks[state.music]) return;
+  const track = tracks[state.music];
+  [72, 76, 79].forEach((note, index) => tone(note, 0.22, track.wave, 0.055, index * 0.09));
+}
+
+function celebrate() {
+  if (reducedMotion.matches) return;
+  for (let index = 0; index < 13; index++) {
+    const piece = document.createElement("i");
+    const angle = index * Math.PI * 2 / 13, distance = 92 + index % 4 * 23;
+    piece.className = "spark";
+    piece.style.background = colors[index % colors.length];
+    piece.style.setProperty("--x", Math.cos(angle) * distance + "px");
+    piece.style.setProperty("--y", Math.sin(angle) * distance + "px");
+    $("arena").append(piece);
+    setTimeout(() => piece.remove(), 700);
+  }
+}
+
+function draw() {
+  if (busy) return;
+  busy = true;
+  const index = randomIndex(state.count);
+  const speed = speeds[state.speed];
+  const duration = state.mode === "quick" || reducedMotion.matches ? 0 : speed.duration;
+  let shuffle;
+  render();
+  result.textContent = "抽選中…";
+  startMusic();
+
+  if (state.mode === "wheel") {
+    const target = (360 - index * 360 / state.count) % 360;
+    const offset = (target - rotation % 360 + 360) % 360;
+    rotation += offset + (duration ? speed.turns * 360 : 0);
+    wheel.style.transition = duration ? "transform " + duration + "ms cubic-bezier(.16,.74,.22,1)" : "none";
+    wheel.style.transform = "rotate(" + rotation + "deg)";
+  } else if (duration) {
+    face.classList.add("rolling");
+    shuffle = setInterval(() => { face.textContent = randomIndex(state.count) + 1; }, 100);
+  }
+
+  setTimeout(() => {
+    clearInterval(shuffle);
+    face.classList.remove("rolling");
+    const winner = index + 1;
+    face.textContent = winner;
+    busy = false;
+    state.history.unshift(winner);
+    state.history = state.history.slice(0, 8);
+    save();
+    render();
+    const badge = document.createElement("strong");
+    badge.textContent = winner;
+    result.replaceChildren("結果は", badge, "番！");
+    endMusic();
+    celebrate();
+  }, duration);
+}
+
+createButtons($("count"), countOptions, "count");
+createButtons($("modes"), Object.entries(modes).map(([value, mode]) => [value, mode.label, mode.icon]), "mode");
+createButtons($("speeds"), Object.entries(speeds).map(([value, speed]) => [value, speed.label]), "speed");
+music.addEventListener("change", () => { state.music = music.value; save(); });
+spin.addEventListener("click", draw);
+render();
+</script>
+</body>
+</html>
