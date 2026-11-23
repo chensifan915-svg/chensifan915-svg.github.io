@@ -44,8 +44,11 @@ canvas{width:100%;height:auto;display:block;transform:rotate(0deg);filter:drop-s
 @keyframes bounce{to{translate:0 -10px;rotate:3deg}}
 [hidden]{display:none!important}
 .stage-foot{display:grid;gap:10px;padding:5px 19px 14px}
-.result{display:flex;align-items:center;justify-content:center;gap:8px;min-height:32px;margin:0;font-size:14px;text-align:center}
-.result strong{display:inline-grid;place-items:center;min-width:35px;height:31px;padding:0 7px;border-radius:8px;background:var(--yellow);font:900 22px/1 system-ui,sans-serif}
+.result{display:grid;place-items:center;min-height:46px;margin:0;padding:7px 12px;border:2px solid #d8cee9;border-radius:13px;background:#f5efff;color:#504661;text-align:center;font-size:14px;font-weight:800}
+.result[data-state="winner"]{gap:2px;min-height:112px;padding:8px 12px;border-color:var(--ink);background:#2b2454;color:#fffdf6}
+.result-label{font-size:13px;letter-spacing:.08em}
+.result-value{display:flex;align-items:baseline;justify-content:center;gap:5px;white-space:nowrap;font-size:20px}
+.result-number{color:var(--yellow);font:900 clamp(56px,9vw,82px)/.96 system-ui,sans-serif;font-variant-numeric:tabular-nums}
 .spin{min-height:56px;border:2px solid var(--ink);border-radius:13px;background:var(--yellow);box-shadow:3px 3px var(--ink);font-size:19px;font-weight:900;letter-spacing:.04em}
 .spin:hover:enabled{background:#ffdb76;transform:translateY(-1px)}
 .spin:active:enabled{transform:translate(3px,3px);box-shadow:none}
@@ -80,7 +83,8 @@ select{width:100%;min-height:34px;border:1px solid #c8c0b3;border-radius:8px;bac
  .stage,.controls fieldset{width:100%}.controls fieldset:first-child{order:-1}.stage{order:0}
  .stage-head{min-height:40px;padding:5px 12px;font-size:13px}.odds{font-size:10px}
  .arena{min-height:0;padding:10px 14px 5px}.wheel-box{width:min(66vw,226px)}
- .stage-foot{padding:3px 11px 12px;gap:4px}.spin{min-height:48px;font-size:16px}.result{min-height:27px;font-size:12px}
+ .stage-foot{padding:3px 11px 12px;gap:8px}.spin{min-height:48px;font-size:16px}.result{min-height:38px;font-size:13px}
+ .result[data-state="winner"]{min-height:94px;padding:6px 10px}.result-value{font-size:17px}
  fieldset{padding:8px 10px 10px}h2{margin-bottom:5px;font-size:13px}.count{grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
  .count button{min-height:34px;padding:0;font-size:12px}.tip{margin-top:5px;font-size:10px}
  .face{margin:16px 0}.recent{margin:18px 0 25px}
@@ -120,7 +124,7 @@ select{width:100%;min-height:34px;border:1px solid #c8c0b3;border-radius:8px;bac
     <div class="wheel-box" id="wheel-box" aria-hidden="true"><canvas id="wheel" width="640" height="640"></canvas><div class="pointer"></div></div>
     <div class="face" id="face" aria-hidden="true" hidden>?</div>
    </div>
-   <div class="stage-foot"><button class="spin" id="spin" type="button">回す</button><p class="result" id="result" role="status" aria-live="polite">どの番号が出るかな？</p></div>
+   <div class="stage-foot"><button class="spin" id="spin" type="button">回す</button><p class="result" id="result" role="status" aria-live="polite" aria-atomic="true">どの番号が出るかな？</p></div>
   </section>
  </div>
  <div class="recent" id="recent" hidden><b>最近の結果</b><span id="history"></span></div>
@@ -239,6 +243,7 @@ function resetStage() {
   wheel.style.transition = "none";
   wheel.style.transform = "rotate(0deg)";
   face.textContent = "?";
+  delete result.dataset.state;
   result.textContent = "どの番号が出るかな？";
 }
 
@@ -334,6 +339,7 @@ function draw() {
   const duration = state.mode === "quick" || reducedMotion.matches ? 0 : speed.duration;
   let shuffle;
   render();
+  delete result.dataset.state;
   result.textContent = "抽選中…";
   startMusic();
 
@@ -358,9 +364,17 @@ function draw() {
     state.history = state.history.slice(0, 8);
     save();
     render();
-    const badge = document.createElement("strong");
-    badge.textContent = winner;
-    result.replaceChildren("結果は", badge, "番！");
+    const label = document.createElement("span");
+    label.className = "result-label";
+    label.textContent = "抽選結果";
+    const number = document.createElement("strong");
+    number.className = "result-number";
+    number.textContent = winner;
+    const value = document.createElement("span");
+    value.className = "result-value";
+    value.append(number, " 番");
+    result.dataset.state = "winner";
+    result.replaceChildren(label, value);
     endMusic();
     celebrate();
   }, duration);
