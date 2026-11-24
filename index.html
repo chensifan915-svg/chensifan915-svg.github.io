@@ -424,6 +424,7 @@
         border-radius: 999px; padding: 2.5px 10px;
       }
       .task .title { font-size: 15.5px; font-weight: 700; line-height: 1.45; margin-top: 3px; }
+      .task .dur { display: block; font-size: 13px; font-weight: 800; color: var(--xp); margin-top: 2px; font-variant-numeric: tabular-nums; }
       .task .xp {
         flex: 0 0 auto; align-self: center;
         font-size: 13px; font-weight: 800; color: var(--xp);
@@ -1203,6 +1204,15 @@
         if (mins >= 30) return 20;
         return 10;
       }
+      function durationText(start, end) {
+        function toMin(s) { var p = s.split(":"); return (+p[0]) * 60 + (+p[1]); }
+        var mins = toMin(end) - toMin(start);
+        if (mins <= 0) return "";
+        var h = Math.floor(mins / 60), m = mins % 60;
+        if (h && m) return h + "時間" + m + "分";
+        if (h) return h + "時間";
+        return m + "分";
+      }
       function levelFor(totalXp) {
         var level = 1, rest = totalXp;
         while (rest >= level * 100) { rest -= level * 100; level += 1; }
@@ -1626,6 +1636,7 @@
                   '<span class="subj" style="background:' + st.bg + ";color:" + st.fg + '">' + t[2] + "</span>" +
                 "</span>" +
                 '<span class="title" style="display:block">' + t[3] + "</span>" +
+                '<span class="dur">⏱ ' + durationText(t[0], t[1]) + "</span>" +
                 '<span class="detail-hint">タップで詳細</span>' +
               "</span>" +
               '<span class="xp">+' + xp + " XP</span>" +
