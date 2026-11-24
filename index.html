@@ -330,6 +330,53 @@
       .pack-item.on .pack-box { background: var(--good); border-color: var(--good); }
       .pack-item.on .pack-name { text-decoration: line-through; text-decoration-thickness: 2px; }
 
+      /* ---------- start check ---------- */
+      .start {
+        background: var(--card);
+        border: 3px solid var(--accent);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 14px 14px 13px;
+        margin-bottom: 12px;
+      }
+      .start-title { font-size: 18px; font-weight: 800; margin: 0; }
+      .start-label { font-size: 13px; font-weight: 800; color: var(--ink-sub); margin-top: 12px; }
+      .tier-row { display: flex; gap: 8px; margin-top: 8px; }
+      .tier-btn {
+        flex: 1 1 0;
+        border: 2.5px solid var(--line);
+        background: var(--card-soft);
+        color: var(--ink);
+        border-radius: 14px;
+        padding: 10px 4px;
+        font-size: 16px; font-weight: 800;
+        min-height: 48px;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.2s, border-color 0.2s, color 0.2s;
+      }
+      .tier-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .start-target {
+        margin-top: 10px;
+        font-size: 14px; font-weight: 800; line-height: 1.5;
+        background: var(--card-soft);
+        border-radius: 12px;
+        padding: 9px 12px;
+      }
+      .start-btn {
+        display: block; width: 100%;
+        margin-top: 13px;
+        border: none;
+        border-radius: 14px;
+        padding: 13px 10px;
+        font-size: 17px; font-weight: 800;
+        background: var(--line); color: var(--ink-sub);
+        min-height: 52px;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.2s, color 0.2s;
+      }
+      .start-btn.ready { background: var(--good); color: #fff; }
+      .start-btn.done { background: var(--good); color: #fff; }
+
       /* ---------- task cards ---------- */
       .tasks { display: flex; flex-direction: column; gap: 10px; }
       .task {
@@ -666,6 +713,20 @@
           <div class="dp-text" id="dpText"></div>
         </div>
       </div>
+
+      <!-- start check -->
+      <section class="start" aria-label="今日のスタートチェック">
+        <div class="pack-head">
+          <h2 class="start-title">🚀 今日のスタートチェック</h2>
+          <span class="pack-count" id="startState"></span>
+        </div>
+        <div class="start-label">① 今日の調子は？</div>
+        <div class="tier-row" id="tierRow"></div>
+        <div class="start-target" id="startTarget"></div>
+        <div class="start-label">② スタート前のチェック</div>
+        <div class="pack-list" id="startChecks"></div>
+        <button class="start-btn" id="startBtn" type="button"></button>
+      </section>
 
       <!-- belongings -->
       <section class="pack" aria-label="今日の持ち物">
@@ -1238,6 +1299,7 @@
               state.checked = cloudState.checked || {};
               state.guided = !!(cloudState.guided || state.guided);
               state.pack = cloudState.pack || state.pack || {};
+              state.start = cloudState.start || state.start || {};
               saveLocal();
               if (typeof renderAll === "function") renderAll();
               setSyncNote("☁️ 同期済み", false);
@@ -1281,7 +1343,7 @@
 
       /* ================= state (localStorage) ================= */
       var LS_KEY = "benkyo-quest-public-v1";
-      var state = { checked: {}, guided: false, pack: {} };
+      var state = { checked: {}, guided: false, pack: {}, start: {} };
       try {
         var raw = localStorage.getItem(LS_KEY);
         if (raw) {
@@ -1290,6 +1352,7 @@
             state.checked = parsed.checked || {};
             state.guided = !!parsed.guided;
             state.pack = parsed.pack || {};
+            state.start = parsed.start || {};
           }
         }
       } catch (e) { /* storage unavailable: run in-memory only */ }
@@ -1413,6 +1476,85 @@
         add("筆記具");
         return items;
       }
+      var TIERS = [
+        { key: "normal", label: "ふつう", target: "目標：今日のタスク全部に挑戦。15分セットで進めよう。" },
+        { key: "low", label: "低め", target: "目標：基本の問題だけやればOK。難しい問題は飛ばしていい。" },
+        { key: "zero", label: "ほぼゼロ", target: "目標：最低限プラン＝5分スタート＋数学15分1セット＋単語10分。それで成功！" }
+      ];
+      var START_CHECKS = [
+        "📱 スマホを別の部屋に置いた",
+        "📖 最初の1問を決めた（ページを開く）",
+        "⏱ 5分タイマーを用意した"
+      ];
+      function startOf(day) {
+        if (!state.start) state.start = {};
+        if (!state.start[day.date]) state.start[day.date] = {};
+        return state.start[day.date];
+      }
+      function renderStart(day) {
+        var tierRow = $("tierRow"), targetEl = $("startTarget"),
+            checksEl = $("startChecks"), btn = $("startBtn"), stateEl = $("startState");
+        if (!tierRow || !btn) return;
+        var s = startOf(day);
+        tierRow.innerHTML = "";
+        TIERS.forEach(function (t) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "tier-btn" + (s.tier === t.key ? " on" : "");
+          b.textContent = t.label;
+          b.setAttribute("aria-pressed", s.tier === t.key ? "true" : "false");
+          b.addEventListener("click", function () {
+            s.tier = (s.tier === t.key) ? null : t.key;
+            save();
+            renderStart(day);
+          });
+          tierRow.appendChild(b);
+        });
+        var tier = null;
+        TIERS.forEach(function (t) { if (t.key === s.tier) tier = t; });
+        targetEl.textContent = tier ? tier.target : "まず今日の調子を選んでね。それで今日の目標が決まるよ。";
+        checksEl.innerHTML = "";
+        var checksDone = 0;
+        START_CHECKS.forEach(function (name, i) {
+          var key = "c" + (i + 1);
+          var on = !!s[key];
+          if (on) checksDone += 1;
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "pack-item" + (on ? " on" : "");
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+          b.innerHTML = '<span class="pack-box">' + (on ? "✓" : "") + '</span><span class="pack-name">' + name + "</span>";
+          b.addEventListener("click", function () {
+            if (s[key]) delete s[key]; else s[key] = true;
+            save();
+            renderStart(day);
+          });
+          checksEl.appendChild(b);
+        });
+        var ready = !!tier && checksDone === START_CHECKS.length;
+        if (s.at) {
+          stateEl.textContent = "✅ スタート済み";
+          stateEl.className = "pack-count all";
+          btn.className = "start-btn done";
+          btn.textContent = "✅ " + s.at + " スタート済み！最初の1問からいこう";
+        } else {
+          var left = (tier ? 0 : 1) + (START_CHECKS.length - checksDone);
+          stateEl.textContent = ready ? "準備OK！" : "あと" + left + "つ";
+          stateEl.className = "pack-count" + (ready ? " all" : "");
+          btn.className = "start-btn" + (ready ? " ready" : "");
+          btn.textContent = ready ? "▶ 勉強スタート！" : "調子とチェックがそろうとスタートできるよ";
+        }
+        btn.onclick = function () {
+          if (s.at) { delete s.at; save(); renderStart(day); return; }
+          if (!ready) return;
+          var now = new Date();
+          var hh = ("0" + now.getHours()).slice(-2), mm = ("0" + now.getMinutes()).slice(-2);
+          s.at = hh + ":" + mm;
+          save();
+          renderStart(day);
+        };
+      }
+
       function packId(date, i) { return date + "#p" + i; }
       function renderPack(day) {
         var listEl = $("packList"), countEl = $("packCount");
@@ -1463,6 +1605,7 @@
         $("dpFill").style.width = (s.total ? Math.round((s.done / s.total) * 100) : 0) + "%";
         $("dpText").textContent = s.done + " / " + s.total + " クリア";
 
+        renderStart(day);
         renderPack(day);
 
         tasksEl.innerHTML = "";
@@ -1691,6 +1834,7 @@
       $("btnResetOk").addEventListener("click", function () {
         state.checked = {};
         state.pack = {};
+        state.start = {};
         save();
         $("resetOverlay").classList.remove("show");
         renderAll();
